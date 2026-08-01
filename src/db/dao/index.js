@@ -474,7 +474,7 @@ class PetsDAO extends BaseDAO {
     });
   }
 
-  async getUpcomingReminders(days = 7) {
+  async getUpcomingReminders(days = 14) {
     const today = DateUtils.today();
     const endDate = DateUtils.addDays(today, days);
     const all = await this.getAll();

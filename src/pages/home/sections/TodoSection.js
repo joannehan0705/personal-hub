@@ -161,7 +161,7 @@ function PetCard() {
   const [reminders, setReminders] = useState([]);
 
   useEffect(() => {
-    DAO.pets.getUpcomingReminders(7).then(setReminders);
+    DAO.pets.getUpcomingReminders(14).then(setReminders);
   }, [dataVersion]);
 
   const featured = reminders[0];
