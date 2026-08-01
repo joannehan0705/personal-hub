@@ -158,213 +158,215 @@ function StudioForm({ open, onClose, note }) {
     paddingLeft: 'var(--space-xs)', display: 'block', marginBottom: 'var(--space-xs)',
   };
 
-  return h(Sheet, { open, onClose, title: note ? '编辑灵感' : '新增灵感' },
-    h('div', { style: { display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' } },
+  return h(React.Fragment, null,
+    h(Sheet, { open: open && !fullscreenEdit, onClose, title: note ? '编辑灵感' : '新增灵感' },
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' } },
 
-      h(Input, {
-        label: '标题',
-        value: title,
-        onChange: setTitle,
-        placeholder: '灵感标题...',
-        required: true,
-      }),
-
-      // 内容（可全屏编辑）
-      h('div', null,
-        h('div', {
-          style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xs)' },
-        },
-          h('label', {
-            style: { fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', paddingLeft: 'var(--space-xs)' },
-          }, '内容'),
-          h('button', {
-            onClick: () => { Haptics.light(); setFullscreenEdit(true); },
-            style: {
-              display: 'flex', alignItems: 'center', gap: '4px',
-              padding: '4px 10px', borderRadius: 'var(--radius-pill)',
-              backgroundColor: 'var(--color-bg-subtle)', border: 'none',
-              fontSize: '12px', color: 'var(--color-text-secondary)', cursor: 'pointer',
-            },
-          }, '⤢ 全屏编辑'),
-        ),
         h(Input, {
-          value: content,
-          onChange: setContent,
-          placeholder: '写下你的灵感...',
-          multiline: true,
-          rows: 4,
+          label: '标题',
+          value: title,
+          onChange: setTitle,
+          placeholder: '灵感标题...',
+          required: true,
         }),
-      ),
 
-      // 分类选择
-      h('div', null,
-        h('label', { style: labelStyle }, '分类'),
-        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' } },
-          CATEGORIES.notes.map(cat =>
-            h('button', {
-              key: cat.key,
-              onClick: () => { Haptics.selection(); setCategory(cat.key); },
-              style: tagChipStyle(category === cat.key),
-            }, `${cat.icon} ${cat.label}`)
-          )
-        )
-      ),
-
-      // 标签
-      h('div', null,
-        h('label', { style: labelStyle }, '标签'),
-        // 已选标签
-        tags.length > 0 && h('div', {
-          style: { display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: 'var(--space-sm)' }
-        },
-          tags.map(tag =>
-            h('span', {
-              key: tag,
-              onClick: () => { Haptics.light(); removeTag(tag); },
-              style: {
-                display: 'inline-flex', alignItems: 'center', gap: '4px',
-                padding: '5px 10px', borderRadius: 'var(--radius-pill)',
-                backgroundColor: 'var(--color-accent-light)', fontSize: '13px',
-                color: 'var(--color-accent)', fontWeight: 500, cursor: 'pointer',
-              }
-            }, '#' + tag, h('span', { style: { fontSize: '15px', lineHeight: 1 } }, '×'))
-          )
-        ),
-        // 预设标签
-        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: 'var(--space-sm)' } },
-          CATEGORIES.studioTagPresets.map(tag =>
-            h('button', {
-              key: tag,
-              onClick: () => togglePresetTag(tag),
-              style: tagChipStyle(tags.includes(tag)),
-            }, tag)
-          )
-        ),
-        // 自定义输入
-        h('div', { style: { display: 'flex', gap: 'var(--space-xs)' } },
-          h('input', {
-            value: tagInput,
-            onChange: (e) => setTagInput(e.target.value),
-            onKeyDown: (e) => {
-              if (e.key === 'Enter') { e.preventDefault(); addTag(tagInput); }
-            },
-            placeholder: '自定义标签...',
-            style: {
-              flex: 1, padding: '8px 12px', borderRadius: 'var(--radius-sm)',
-              fontSize: '14px', backgroundColor: 'var(--color-bg-subtle)',
-              border: 'none', outline: 'none', color: 'var(--color-text-primary)',
-            }
-          }),
-          h('button', {
-            onClick: () => { Haptics.light(); addTag(tagInput); },
-            style: {
-              width: '36px', borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'var(--color-bg-subtle)',
-              fontSize: '18px', color: 'var(--color-accent)',
-            }
-          }, '+')
-        )
-      ),
-
-      h(Input, {
-        label: '备注',
-        value: remarks,
-        onChange: setRemarks,
-        placeholder: '额外说明、注意事项等...',
-        multiline: true,
-        rows: 2,
-      }),
-
-      // ===== Closet 专属字段 =====
-      category === 'closet' && h('div', {
-        style: {
-          padding: 'var(--space-md)', borderRadius: 'var(--radius-md)',
-          backgroundColor: 'var(--color-bg-subtle)',
-          display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)',
-        }
-      },
-        h('div', {
-          style: { fontSize: '14px', fontWeight: 600, color: 'var(--color-text-secondary)' }
-        }, '👕 Outfit Details'),
-
-        // Outfit 5 字段
-        h(Input, { label: 'Top', value: outfitTop, onChange: setOutfitTop, placeholder: '如 White Linen Shirt' }),
-        h(Input, { label: 'Bottom', value: outfitBottom, onChange: setOutfitBottom, placeholder: '如 Straight Jeans' }),
-        h(Input, { label: 'Shoes', value: outfitShoes, onChange: setOutfitShoes, placeholder: '如 Black Loafers' }),
-        h(Input, { label: 'Bag', value: outfitBag, onChange: setOutfitBag, placeholder: '如 Black Shoulder Bag' }),
-        h(Input, { label: 'Accessory', value: outfitAccessory, onChange: setOutfitAccessory, placeholder: '如 Gold Earrings' }),
-
-        // Style Tags
+        // 内容（可全屏编辑）
         h('div', null,
-          h('label', { style: labelStyle }, 'Style Tags'),
-          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px' } },
-            CATEGORIES.closetStyleTags.map(tag =>
+          h('div', {
+            style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xs)' },
+          },
+            h('label', {
+              style: { fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', paddingLeft: 'var(--space-xs)' },
+            }, '内容'),
+            h('button', {
+              onClick: () => { Haptics.light(); setFullscreenEdit(true); },
+              style: {
+                display: 'flex', alignItems: 'center', gap: '4px',
+                padding: '4px 10px', borderRadius: 'var(--radius-pill)',
+                backgroundColor: 'var(--color-bg-subtle)', border: 'none',
+                fontSize: '12px', color: 'var(--color-text-secondary)', cursor: 'pointer',
+              },
+            }, '⤢ 全屏编辑'),
+          ),
+          h(Input, {
+            value: content,
+            onChange: setContent,
+            placeholder: '写下你的灵感...',
+            multiline: true,
+            rows: 4,
+          }),
+        ),
+
+        // 分类选择
+        h('div', null,
+          h('label', { style: labelStyle }, '分类'),
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' } },
+            CATEGORIES.notes.map(cat =>
+              h('button', {
+                key: cat.key,
+                onClick: () => { Haptics.selection(); setCategory(cat.key); },
+                style: tagChipStyle(category === cat.key),
+              }, `${cat.icon} ${cat.label}`)
+            )
+          )
+        ),
+
+        // 标签
+        h('div', null,
+          h('label', { style: labelStyle }, '标签'),
+          // 已选标签
+          tags.length > 0 && h('div', {
+            style: { display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: 'var(--space-sm)' }
+          },
+            tags.map(tag =>
+              h('span', {
+                key: tag,
+                onClick: () => { Haptics.light(); removeTag(tag); },
+                style: {
+                  display: 'inline-flex', alignItems: 'center', gap: '4px',
+                  padding: '5px 10px', borderRadius: 'var(--radius-pill)',
+                  backgroundColor: 'var(--color-accent-light)', fontSize: '13px',
+                  color: 'var(--color-accent)', fontWeight: 500, cursor: 'pointer',
+                }
+              }, '#' + tag, h('span', { style: { fontSize: '15px', lineHeight: 1 } }, '×'))
+            )
+          ),
+          // 预设标签
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: 'var(--space-sm)' } },
+            CATEGORIES.studioTagPresets.map(tag =>
               h('button', {
                 key: tag,
-                onClick: () => toggleStyleTag(tag),
-                style: tagChipStyle(styleTags.includes(tag)),
+                onClick: () => togglePresetTag(tag),
+                style: tagChipStyle(tags.includes(tag)),
               }, tag)
             )
+          ),
+          // 自定义输入
+          h('div', { style: { display: 'flex', gap: 'var(--space-xs)' } },
+            h('input', {
+              value: tagInput,
+              onChange: (e) => setTagInput(e.target.value),
+              onKeyDown: (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); addTag(tagInput); }
+              },
+              placeholder: '自定义标签...',
+              style: {
+                flex: 1, padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+                fontSize: '14px', backgroundColor: 'var(--color-bg-subtle)',
+                border: 'none', outline: 'none', color: 'var(--color-text-primary)',
+              }
+            }),
+            h('button', {
+              onClick: () => { Haptics.light(); addTag(tagInput); },
+              style: {
+                width: '36px', borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--color-bg-subtle)',
+                fontSize: '18px', color: 'var(--color-accent)',
+              }
+            }, '+')
           )
         ),
 
-        // Color Palette
         h(Input, {
-          label: 'Color Palette',
-          value: colorPalette,
-          onChange: setColorPalette,
-          placeholder: 'White, Blue, Black',
+          label: '备注',
+          value: remarks,
+          onChange: setRemarks,
+          placeholder: '额外说明、注意事项等...',
+          multiline: true,
+          rows: 2,
         }),
 
-        // Season
-        h('div', null,
-          h('label', { style: labelStyle }, 'Season'),
-          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px' } },
-            CATEGORIES.closetSeasons.map(s =>
-              h('button', {
-                key: s.key,
-                onClick: () => { Haptics.selection(); setSeason(season === s.key ? '' : s.key); },
-                style: tagChipStyle(season === s.key),
-              }, s.label)
+        // ===== Closet 专属字段 =====
+        category === 'closet' && h('div', {
+          style: {
+            padding: 'var(--space-md)', borderRadius: 'var(--radius-md)',
+            backgroundColor: 'var(--color-bg-subtle)',
+            display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)',
+          }
+        },
+          h('div', {
+            style: { fontSize: '14px', fontWeight: 600, color: 'var(--color-text-secondary)' }
+          }, '👕 Outfit Details'),
+
+          // Outfit 5 字段
+          h(Input, { label: 'Top', value: outfitTop, onChange: setOutfitTop, placeholder: '如 White Linen Shirt' }),
+          h(Input, { label: 'Bottom', value: outfitBottom, onChange: setOutfitBottom, placeholder: '如 Straight Jeans' }),
+          h(Input, { label: 'Shoes', value: outfitShoes, onChange: setOutfitShoes, placeholder: '如 Black Loafers' }),
+          h(Input, { label: 'Bag', value: outfitBag, onChange: setOutfitBag, placeholder: '如 Black Shoulder Bag' }),
+          h(Input, { label: 'Accessory', value: outfitAccessory, onChange: setOutfitAccessory, placeholder: '如 Gold Earrings' }),
+
+          // Style Tags
+          h('div', null,
+            h('label', { style: labelStyle }, 'Style Tags'),
+            h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px' } },
+              CATEGORIES.closetStyleTags.map(tag =>
+                h('button', {
+                  key: tag,
+                  onClick: () => toggleStyleTag(tag),
+                  style: tagChipStyle(styleTags.includes(tag)),
+                }, tag)
+              )
             )
-          )
+          ),
+
+          // Color Palette
+          h(Input, {
+            label: 'Color Palette',
+            value: colorPalette,
+            onChange: setColorPalette,
+            placeholder: 'White, Blue, Black',
+          }),
+
+          // Season
+          h('div', null,
+            h('label', { style: labelStyle }, 'Season'),
+            h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px' } },
+              CATEGORIES.closetSeasons.map(s =>
+                h('button', {
+                  key: s.key,
+                  onClick: () => { Haptics.selection(); setSeason(season === s.key ? '' : s.key); },
+                  style: tagChipStyle(season === s.key),
+                }, s.label)
+              )
+            )
+          ),
+
+          // Occasion
+          h('div', null,
+            h('label', { style: labelStyle }, 'Occasion'),
+            h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px' } },
+              CATEGORIES.closetOccasions.map(o =>
+                h('button', {
+                  key: o.key,
+                  onClick: () => { Haptics.selection(); setOccasion(occasion === o.key ? '' : o.key); },
+                  style: tagChipStyle(occasion === o.key),
+                }, o.label)
+              )
+            )
+          ),
+
+          // Brand
+          h(Input, { label: 'Brand (optional)', value: brand, onChange: setBrand, placeholder: '品牌名...' }),
+
+          // Source Link
+          h(Input, { label: 'Source Link (optional)', value: sourceLink, onChange: setSourceLink, placeholder: 'https://...' }),
         ),
 
-        // Occasion
-        h('div', null,
-          h('label', { style: labelStyle }, 'Occasion'),
-          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px' } },
-            CATEGORIES.closetOccasions.map(o =>
-              h('button', {
-                key: o.key,
-                onClick: () => { Haptics.selection(); setOccasion(occasion === o.key ? '' : o.key); },
-                style: tagChipStyle(occasion === o.key),
-              }, o.label)
-            )
-          )
+        // 收藏
+        h('div', {
+          style: { display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: '0 var(--space-xs)' }
+        },
+          h(Checkbox, { checked: favorite, onChange: setFavorite }),
+          h('span', {
+            style: { fontSize: '15px', color: favorite ? 'var(--color-accent)' : 'var(--color-text-secondary)', fontWeight: favorite ? 600 : 400 }
+          }, '⭐ 收藏')
         ),
 
-        // Brand
-        h(Input, { label: 'Brand (optional)', value: brand, onChange: setBrand, placeholder: '品牌名...' }),
-
-        // Source Link
-        h(Input, { label: 'Source Link (optional)', value: sourceLink, onChange: setSourceLink, placeholder: 'https://...' }),
+        h(Button, { fullWidth: true, onClick: handleSave }, note ? '保存' : '添加'),
       ),
-
-      // 收藏
-      h('div', {
-        style: { display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: '0 var(--space-xs)' }
-      },
-        h(Checkbox, { checked: favorite, onChange: setFavorite }),
-        h('span', {
-          style: { fontSize: '15px', color: favorite ? 'var(--color-accent)' : 'var(--color-text-secondary)', fontWeight: favorite ? 600 : 400 }
-        }, '⭐ 收藏')
-      ),
-
-      h(Button, { fullWidth: true, onClick: handleSave }, note ? '保存' : '添加'),
     ),
 
-    // 全屏编辑覆盖层
+    // 全屏编辑覆盖层 — 渲染在 Sheet 外部，避免 transform 影响 fixed 定位
     fullscreenEdit && h('div', {
       style: {
         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -384,10 +386,13 @@ function StudioForm({ open, onClose, note }) {
       },
         h('button', {
           onClick: () => { Haptics.light(); setFullscreenEdit(false); },
-          style: { fontSize: '16px', color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer' },
+          style: { fontSize: '16px', color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' },
         }, '完成'),
         h('span', { style: { fontSize: '16px', fontWeight: 600, color: 'var(--color-text-primary)' } }, '编辑内容'),
-        h('div', { style: { width: '44px' } }),
+        h('button', {
+          onClick: () => { Haptics.light(); setFullscreenEdit(false); },
+          style: { fontSize: '20px', color: 'var(--color-text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 },
+        }, '×'),
       ),
       // 编辑区
       h('textarea', {
