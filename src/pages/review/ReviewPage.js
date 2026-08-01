@@ -301,7 +301,7 @@ function ReviewPage() {
           }),
         ),
 
-        // ===== Highlights (Capsule List) =====
+        // ===== Highlights =====
         highlights.length > 0 && h('div', {
           style: { marginBottom: 'var(--space-lg)' },
         },
@@ -309,19 +309,20 @@ function ReviewPage() {
             key: i,
             style: {
               display: 'flex', alignItems: 'center', gap: 'var(--space-sm)',
-              padding: '12px var(--space-lg)',
+              padding: '10px var(--space-lg)',
               marginBottom: 'var(--space-xs)',
+              backgroundColor: 'var(--color-bg-card)',
               borderRadius: '14px',
-              backgroundColor: hl.color + '12',
+              border: '1px solid var(--color-border-light)',
               fontSize: '13px',
               color: 'var(--color-text-secondary)',
-              minHeight: '48px',
+              minHeight: '44px',
             },
           },
             h('div', {
               style: {
                 width: '28px', height: '28px', borderRadius: '50%',
-                backgroundColor: hl.color + '25',
+                backgroundColor: hl.color + '20',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '14px', flexShrink: 0,
               },
