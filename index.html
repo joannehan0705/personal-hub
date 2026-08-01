@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Hub">
+  <meta name="theme-color" content="#5B8A8E" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1C1A17" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/icons/icon-192.png">
+  <link rel="stylesheet" href="./assets/styles/theme.css">
+  <title>Personal Hub</title>
+</head>
+<body>
+  <div id="root"></div>
+  <!-- React 18 + idb 通过 CDN 引入，Service Worker 会缓存 -->
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/idb@8.0.0/build/umd.js"></script>
+  <!-- 主应用按模块加载 -->
+  <script src="./src/constants/config.js"></script>
+  <script src="./src/constants/categories.js"></script>
+  <script src="./src/utils/id.js"></script>
+  <script src="./src/utils/date.js"></script>
+  <script src="./src/utils/format.js"></script>
+  <script src="./src/utils/haptics.js"></script>
+  <script src="./src/utils/csv.js"></script>
+  <script src="./src/utils/backup.js"></script>
+  <script src="./src/db/database.js"></script>
+  <script src="./src/db/base-dao.js"></script>
+  <script src="./src/db/dao/index.js"></script>
+  <script src="./src/store/AppContext.js"></script>
+  <script src="./src/components/ui/Icon.js"></script>
+  <script src="./src/components/ui/Button.js"></script>
+  <script src="./src/components/ui/Input.js"></script>
+  <script src="./src/components/ui/Card.js"></script>
+  <script src="./src/components/ui/Checkbox.js"></script>
+  <script src="./src/components/ui/Tag.js"></script>
+  <script src="./src/components/ui/Select.js"></script>
+  <script src="./src/components/layout/Sheet.js"></script>
+  <script src="./src/components/layout/NavBar.js"></script>
+  <script src="./src/components/layout/TabBar.js"></script>
+  <script src="./src/components/layout/FAB.js"></script>
+  <script src="./src/components/layout/Sidebar.js"></script>
+  <script src="./src/components/shared/QuickAdd.js"></script>
+  <script src="./src/components/shared/SearchBar.js"></script>
+  <script src="./src/pages/todo/TodoPage.js"></script>
+  <script src="./src/pages/todo/TodoForm.js"></script>
+  <script src="./src/pages/shopping/ShoppingPage.js"></script>
+  <script src="./src/pages/shopping/ShoppingForm.js"></script>
+  <script src="./src/pages/finance/FinancePage.js"></script>
+  <script src="./src/pages/finance/TransactionForm.js"></script>
+  <script src="./src/pages/finance/BudgetPage.js"></script>
+  <script src="./src/pages/finance/StatsPage.js"></script>
+  <script src="./src/pages/alex/AlexPage.js"></script>
+  <script src="./src/pages/alex/AlexForm.js"></script>
+  <script src="./src/pages/alex/AllowancePage.js"></script>
+  <script src="./src/pages/pets/PetsPage.js"></script>
+  <script src="./src/pages/pets/PetForm.js"></script>
+  <script src="./src/pages/life/LifeRecipesPage.js"></script>
+  <script src="./src/pages/puff/PuffPage.js"></script>
+  <script src="./src/pages/puff/OrdersPage.js"></script>
+  <script src="./src/pages/puff/OrderForm.js"></script>
+  <script src="./src/pages/puff/OrderDetail.js"></script>
+  <script src="./src/pages/puff/ProductsPage.js"></script>
+  <script src="./src/pages/puff/ProductForm.js"></script>
+  <script src="./src/pages/puff/CustomersPage.js"></script>
+  <script src="./src/pages/puff/RecipesPage.js"></script>
+  <script src="./src/pages/puff/PickupPointsPage.js"></script>
+  <script src="./src/pages/puff/InventoryPage.js"></script>
+  <script src="./src/pages/puff/SocialPage.js"></script>
+  <script src="./src/pages/puff/PuffFinancePage.js"></script>
+  <script src="./src/pages/puff/PuffTransactionForm.js"></script>
+  <script src="./src/pages/puff/PuffStatsPage.js"></script>
+  <script src="./src/pages/puff/MenuPage.js"></script>
+  <script src="./src/pages/puff/MenuForm.js"></script>
+  <script src="./src/pages/home/sections/OverviewCard.js"></script>
+  <script src="./src/pages/home/sections/TodoSection.js"></script>
+  <script src="./src/pages/home/HomePage.js"></script>
+  <script src="./src/pages/notes/NotesPage.js"></script>
+  <script src="./src/pages/notes/NoteForm.js"></script>
+  <script src="./src/pages/wishlist/WishlistPage.js"></script>
+  <script src="./src/pages/wishlist/WishlistForm.js"></script>
+  <script src="./src/pages/settings/SearchPage.js"></script>
+  <script src="./src/pages/settings/DataManagement.js"></script>
+  <script src="./src/pages/settings/SettingsPage.js"></script>
+  <script src="./src/pages/settings/IconCustomizePage.js"></script>
+  <script src="./src/pages/settings/AboutPage.js"></script>
+  <script src="./src/app.js"></script>
+</body>
+</html>

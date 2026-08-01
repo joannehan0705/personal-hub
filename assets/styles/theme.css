@@ -1,0 +1,393 @@
+/* ============================================
+   Personal Hub — 全局样式系统 V3
+   三层布局架构：Content → Action Bar → Bottom Navigation
+   适配 Safari 浏览器 + PWA + iPhone Safe Area
+   ============================================ */
+
+/* ===== CSS 变量：浅色模式 ===== */
+:root {
+  /* 背景层 */
+  --color-bg-base: #FAF8F5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-subtle: #F3F1ED;
+  --color-border: #E8E5E0;
+  --color-border-light: rgba(0, 0, 0, 0.04);
+
+  /* 文字层 */
+  --color-text-primary: #2D2A26;
+  --color-text-secondary: #6B665E;
+  --color-text-tertiary: #9C968B;
+  --color-text-placeholder: #C4BEB3;
+
+  /* 语义色 */
+  --color-today: #E8C547;
+  --color-deadline: #E8826B;
+  --color-complete: #7BAE8E;
+  --color-evening: #8B7EC8;
+  --color-tag: #6B9EC4;
+
+  /* 强调色 */
+  --color-accent: #5B8A8E;
+  --color-accent-light: rgba(91, 138, 142, 0.1);
+  --color-accent-2: #C4A576;
+
+  /* 阴影 */
+  --shadow-1: 0 1px 3px rgba(45, 42, 38, 0.04);
+  --shadow-2: 0 2px 8px rgba(45, 42, 38, 0.05);
+  --shadow-3: 0 4px 16px rgba(45, 42, 38, 0.08);
+  --shadow-4: 0 8px 32px rgba(45, 42, 38, 0.10);
+  --shadow-5: 0 16px 48px rgba(45, 42, 38, 0.15);
+  --shadow-focus: 0 0 0 3px rgba(91, 138, 142, 0.15);
+
+  /* 遮罩 */
+  --color-overlay: rgba(0, 0, 0, 0.4);
+
+  /* 间距 */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+  --space-4xl: 48px;
+
+  /* 圆角 */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 18px;
+  --radius-pill: 999px;
+
+  /* 字体 */
+  --font-family: -apple-system, BlinkMacSystemFontFont, 'SF Pro Text', 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif;
+
+  /* 安全区 — 核心变量 */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* 布局尺寸 — 三层架构核心 */
+  --nav-bar-height: 44px;
+  --tab-bar-height: 56px;
+  --action-bar-height: 48px;
+  --bottom-nav-total: calc(var(--tab-bar-height) + var(--safe-bottom));
+  --bottom-all-total: calc(var(--tab-bar-height) + var(--action-bar-height) + var(--safe-bottom));
+  --fab-size: 56px;
+}
+
+/* ===== CSS 变量：深色模式 ===== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg-base: #1C1A17;
+    --color-bg-card: #262420;
+    --color-bg-subtle: #2E2925;
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-border-light: rgba(255, 255, 255, 0.04);
+
+    --color-text-primary: #F0EDE8;
+    --color-text-secondary: #A8A299;
+    --color-text-tertiary: #6B665E;
+    --color-text-placeholder: #4A4540;
+
+    --color-today: #F0D55A;
+    --color-deadline: #F09680;
+    --color-complete: #8FC4A2;
+    --color-evening: #A298D4;
+    --color-tag: #84B0D4;
+
+    --color-accent: #7BAAB0;
+    --color-accent-light: rgba(123, 170, 176, 0.15);
+    --color-accent-2: #D4B58A;
+
+    --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.15);
+    --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-3: 0 4px 16px rgba(0, 0, 0, 0.25);
+    --shadow-4: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-5: 0 16px 48px rgba(0, 0, 0, 0.4);
+
+    --color-overlay: rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* 手动深色模式 */
+[data-theme="dark"] {
+  --color-bg-base: #1C1A17;
+  --color-bg-card: #262420;
+  --color-bg-subtle: #2E2925;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-light: rgba(255, 255, 255, 0.04);
+
+  --color-text-primary: #F0EDE8;
+  --color-text-secondary: #A8A299;
+  --color-text-tertiary: #6B665E;
+  --color-text-placeholder: #4A4540;
+
+  --color-today: #F0D55A;
+  --color-deadline: #F09680;
+  --color-complete: #8FC4A2;
+  --color-evening: #A298D4;
+  --color-tag: #84B0D4;
+
+  --color-accent: #7BAAB0;
+  --color-accent-light: rgba(123, 170, 176, 0.15);
+  --color-accent-2: #D4B58A;
+
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.15);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-3: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-4: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow-5: 0 16px 48px rgba(0, 0, 0, 0.4);
+
+  --color-overlay: rgba(0, 0, 0, 0.6);
+}
+
+/* ===== 全局重置 ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== 视口高度：兼容 Safari + PWA =====
+   Safari 中 100vh 包含地址栏/工具栏高度，导致内容溢出
+   100dvh = dynamic viewport height（跟随工具栏动态变化）
+   100svh = small viewport height（最小可见高度，更稳定）
+   回退到 100% 给不支持 dvh/svh 的浏览器
+*/
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+@supports (height: 100dvh) {
+  html, body { height: 100dvh; }
+}
+
+/* PWA standalone 模式下 viewport 更稳定，100svh 更合适 */
+@media (display-mode: standalone) {
+  html, body { height: 100%; }
+  @supports (height: 100svh) {
+    html, body { height: 100svh; }
+  }
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-size: 17px;
+  line-height: 22px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+
+/* #root 占满视口，flex column 排列 */
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* App shell 容器 */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ===== 三层布局系统 =====
+
+   层级从下到上：
+   1. Bottom Navigation (fixed, z-100)
+   2. Action Bar (fixed, z-99, 仅部分页面)
+   3. Content (flex:1, 滚动, padding-bottom 留空)
+
+   关键规则：
+   - Bottom Nav 的 bottom = safe-area-inset-bottom
+   - Action Bar 的 bottom = bottom-nav总高 (tab-bar-height + safe-bottom)
+   - Content 的 padding-bottom = bottom-nav总高 或 bottom-all-total(有action bar时)
+   - 不依赖 100vh，用 flex:1 占满 #root 剩余空间
+*/
+
+/* ===== 底部导航：固定在最底层 ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--tab-bar-height) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background-color: var(--color-bg-base);
+  border-top: 1px solid var(--color-border-light);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+/* ===== 页面级操作栏：固定在 Bottom Nav 上方 ===== */
+.action-bar {
+  position: fixed;
+  bottom: var(--bottom-nav-total);
+  left: 0;
+  right: 0;
+  height: var(--action-bar-height);
+  background-color: var(--color-bg-base);
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-xs) var(--space-lg);
+}
+
+/* ===== 滚动容器 ===== */
+.scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  /* 关键：min-height: 0 确保 flex:1 在嵌套 flex 中正确收缩 */
+  min-height: 0;
+}
+
+.scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* ===== 通用工具类 ===== */
+
+/* 普通页面：只预留 Bottom Navigation 空间 */
+.page {
+  padding: 0 var(--space-lg);
+  padding-bottom: calc(var(--bottom-nav-total) + var(--space-xl));
+}
+
+/* 带 Action Bar 的页面：预留 Bottom Nav + Action Bar + Safe Area */
+.page-with-action-bar {
+  padding: 0 var(--space-lg);
+  padding-bottom: calc(var(--bottom-all-total) + var(--space-xl));
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2xl) 0 var(--space-sm);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: -0.005em;
+}
+
+.section-header .count {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--color-border);
+  margin: var(--space-sm) 0;
+}
+
+/* 数字等宽 */
+.numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* 文字截断 */
+.truncate {
+  overflow: hidden;
+  textOverflow: ellipsis;
+  white-space: nowrap;
+}
+
+.truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ===== 动画 ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes checkmarkFill {
+  0% { stroke-dashoffset: 50; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes rowCollapse {
+  0% { max-height: 100px; opacity: 1; }
+  100% { max-height: 0; opacity: 0; padding: 0; margin: 0; }
+}
+
+/* 无障碍：减少动画 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== 表单元素重置 ===== */
+input, textarea, select, button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  border: none;
+  outline: none;
+  background: none;
+}
+
+button {
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+/* 防止文字选择（App 体验） */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 允许输入框选择文字 */
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
