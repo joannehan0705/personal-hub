@@ -16,7 +16,7 @@ function initDB() {
   if (dbPromise) return dbPromise;
 
   dbPromise = idb.openDB(DB_NAME, DB_VERSION, {
-    upgrade(db) {
+    upgrade(db, oldVersion) {
       // ===== todos =====
       if (!db.objectStoreNames.contains('todos')) {
         const store = db.createObjectStore('todos', { keyPath: 'id' });
@@ -110,13 +110,24 @@ function initDB() {
         store.createIndex('scheduledDate', 'scheduledDate');
       }
 
-      // ===== notes (V2) =====
+      // ===== notes (V2, V6 增强) =====
       if (!db.objectStoreNames.contains('notes')) {
         const store = db.createObjectStore('notes', { keyPath: 'id' });
         store.createIndex('category', 'category');
         store.createIndex('pinned', 'pinned');
         store.createIndex('archived', 'archived');
         store.createIndex('createdAt', 'createdAt');
+        store.createIndex('favorite', 'favorite');
+        store.createIndex('tags', 'tags', { multiEntry: true });
+      } else if (oldVersion < 6) {
+        // V5→V6 升级：补充 favorite 和 tags 索引
+        const store = db.transaction('notes', 'readwrite').objectStore('notes');
+        if (!store.indexNames.contains('favorite')) {
+          store.createIndex('favorite', 'favorite');
+        }
+        if (!store.indexNames.contains('tags')) {
+          store.createIndex('tags', 'tags', { multiEntry: true });
+        }
       }
 
       // ===== menus (V2) =====
@@ -205,6 +216,29 @@ window.dbReady.then(database => {
           Promise.all(updates.map(o => tx.store.put(o))).then(() => tx.done);
         }
         database.put('meta', { key: 'orderStatusMigrated', value: true });
+      });
+    }
+  });
+  // 一次性迁移：notes V6 — pinned→favorite, 补 tags/remarks 默认值, shopping→quick
+  database.get('meta', 'notesMigratedV6').then(val => {
+    if (!val) {
+      database.getAll('notes').then(notes => {
+        const updates = notes.map(n => {
+          const needUpdate = n.favorite === undefined || (n.pinned && !n.favorite) || n.tags === undefined || n.remarks === undefined || n.category === 'shopping';
+          if (!needUpdate) return null;
+          return {
+            ...n,
+            favorite: n.favorite !== undefined ? n.favorite : (n.pinned || false),
+            tags: n.tags || [],
+            remarks: n.remarks || '',
+            category: n.category === 'shopping' ? 'quick' : n.category,
+          };
+        }).filter(Boolean);
+        if (updates.length > 0) {
+          const tx = database.transaction('notes', 'readwrite');
+          Promise.all(updates.map(n => tx.store.put(n))).then(() => tx.done);
+        }
+        database.put('meta', { key: 'notesMigratedV6', value: true });
       });
     }
   });

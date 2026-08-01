@@ -174,7 +174,7 @@ function SearchPage() {
 
         results.notes && results.notes.length > 0 && h('div', null,
           h('div', { className: 'section-header', onClick: () => handleResultClick('note'), style: { cursor: 'pointer' } },
-            h('span', null, '✏️ 灵感'), h('span', { className: 'count' }, `${results.notes.length} >`)
+            h('span', null, '🌱 Studio'), h('span', { className: 'count' }, `${results.notes.length} >`)
           ),
           results.notes.slice(0, 3).map(n =>
             h(Card, { key: n.id, onClick: () => handleResultClick('note'), style: { marginBottom: 'var(--space-xs)' } },

@@ -15,7 +15,7 @@ const QUICK_ADD_TYPES = [
   { key: 'alex',     label: 'Alex事项',   icon: 'alex',        color: '#E8C547' },
   { key: 'pet',      label: '宠物记录',   icon: 'paw',         color: '#8B7EC8' },
   { key: 'order',    label: '泡芙订单',   icon: 'puff',        color: '#C4A576' },
-  { key: 'note',     label: '灵感',      icon: 'edit',        color: '#E8C547' },
+  { key: 'note',     label: 'Studio',      icon: 'edit',        color: '#E8C547' },
 ];
 
 function QuickAdd() {

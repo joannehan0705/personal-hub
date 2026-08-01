@@ -751,21 +751,54 @@ class NotesDAO extends BaseDAO {
     return all
       .filter(n => !n.archived)
       .sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
+        if (a.favorite && !b.favorite) return -1;
+        if (!a.favorite && b.favorite) return 1;
         return (b.createdAt || '').localeCompare(a.createdAt || '');
       });
   }
 
   async getArchived() {
     const all = await this.getAll();
-    return all.filter(n => n.archived).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return all.filter(n => n.archived)
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   }
 
+  async getFavorites() {
+    const all = await this.getAll();
+    return all
+      .filter(n => !n.archived && n.favorite)
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  }
+
+  async toggleFavorite(id) {
+    const note = await this.getById(id);
+    if (!note) return null;
+    return await this.update(id, { favorite: !note.favorite });
+  }
+
+  async getByTag(tag) {
+    const all = await this.getAll();
+    return all.filter(n =>
+      (Array.isArray(n.tags) && n.tags.includes(tag)) ||
+      (Array.isArray(n.styleTags) && n.styleTags.includes(tag))
+    );
+  }
+
+  async getAllTags() {
+    const all = await this.getAll();
+    const tagSet = new Set();
+    all.forEach(n => {
+      if (Array.isArray(n.tags)) n.tags.forEach(t => tagSet.add(t));
+      if (Array.isArray(n.styleTags)) n.styleTags.forEach(t => tagSet.add(t));
+    });
+    return Array.from(tagSet).sort();
+  }
+
+  // 兼容旧代码
   async togglePin(id) {
     const note = await this.getById(id);
     if (!note) return null;
-    return await this.update(id, { pinned: !note.pinned });
+    return await this.update(id, { pinned: !note.pinned, favorite: !note.favorite });
   }
 
   async archive(id) {
@@ -779,10 +812,17 @@ class NotesDAO extends BaseDAO {
   async search(keyword) {
     const all = await this.getAll();
     const lower = keyword.toLowerCase();
-    return all.filter(n =>
-      (n.title || '').toLowerCase().includes(lower) ||
-      (n.content || '').toLowerCase().includes(lower)
-    ).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).slice(0, 20);
+    return all.filter(n => {
+      const cat = CATEGORIES.getNoteCategory(n.category);
+      const catLabel = (cat?.label || '').toLowerCase();
+      return (n.title || '').toLowerCase().includes(lower) ||
+             (n.content || '').toLowerCase().includes(lower) ||
+             (n.remarks || '').toLowerCase().includes(lower) ||
+             catLabel.includes(lower) ||
+             (Array.isArray(n.tags) && n.tags.some(t => t.toLowerCase().includes(lower))) ||
+             (Array.isArray(n.styleTags) && n.styleTags.some(t => t.toLowerCase().includes(lower))) ||
+             (n.brand || '').toLowerCase().includes(lower);
+    }).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).slice(0, 30);
   }
 }
 

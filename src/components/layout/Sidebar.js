@@ -21,7 +21,7 @@ const SIDEBAR_ITEMS = [
     { path: '/pets',          icon: 'paw',      label: '宠物',     color: '#8B7EC8' },
     { path: '/life/recipes',  icon: 'edit',     label: '食谱',     color: '#E8826B' },
     { path: '/wishlist',      icon: 'star',     label: '心愿清单', color: '#C4A576' },
-    { path: '/notes',         icon: 'edit',     label: '灵感',     color: '#E8C547' },
+    { path: '/notes',         icon: 'edit',     label: 'Studio',   color: '#E8C547' },
   ]},
   // 泡芙品牌
   { section: 'puff', label: 'anan puff lab', items: [

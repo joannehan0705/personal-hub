@@ -60,15 +60,64 @@ const CATEGORIES = {
     { key: 'special',  label: 'Special',  icon: '🎀' },
   ],
 
-  // 灵感分类
+  // Studio 灵感分类
   notes: [
     { key: 'puff_idea',    label: '泡芙灵感', icon: '🧁' },
     { key: 'product_idea', label: '产品创意', icon: '💡' },
     { key: 'life',         label: '生活想法', icon: '🌿' },
+    { key: 'closet',       label: 'Closet',   icon: '👕' },
     { key: 'quick',        label: '随手记录', icon: '✏️' },
-    { key: 'shopping',     label: '购物灵感', icon: '🛒' },
     { key: 'future',       label: '未来计划', icon: '🔮' },
   ],
+
+  // Studio 列表页 Chips（含「全部」和「Favorites」）
+  studioChips: [
+    { key: 'all',          label: '全部',     icon: '📋' },
+    { key: 'puff_idea',    label: '泡芙灵感', icon: '🧁' },
+    { key: 'product_idea', label: '产品创意', icon: '💡' },
+    { key: 'life',         label: '生活想法', icon: '🌿' },
+    { key: 'closet',       label: 'Closet',   icon: '👕' },
+    { key: 'quick',        label: '随手记录', icon: '✏️' },
+    { key: 'future',       label: '未来计划', icon: '🔮' },
+    { key: 'favorite',     label: 'Favorites', icon: '⭐' },
+  ],
+
+  // Closet 子筛选
+  closetFilters: [
+    { key: 'all',     label: '全部',   icon: '📋' },
+    { key: 'daily',   label: '日常',   icon: '☀️' },
+    { key: 'work',    label: '上班',   icon: '💼' },
+    { key: 'travel',  label: '旅行',   icon: '✈️' },
+    { key: 'summer',  label: '夏天',   icon: '🌞' },
+    { key: 'winter',  label: '冬天',   icon: '❄️' },
+    { key: 'minimal', label: 'Minimal',icon: '⚪' },
+    { key: 'korean',  label: 'Korean', icon: '🇰🇷' },
+    { key: 'favorite',label: '收藏',   icon: '⭐' },
+  ],
+
+  // Closet Style Tags 预设
+  closetStyleTags: ['Minimal', 'Korean', 'Casual', 'Street', 'Elegant', 'Vintage', 'Sporty', 'Business'],
+
+  // Closet Season 选项
+  closetSeasons: [
+    { key: 'spring', label: '春' },
+    { key: 'summer', label: '夏' },
+    { key: 'fall',   label: '秋' },
+    { key: 'winter', label: '冬' },
+  ],
+
+  // Closet Occasion 选项
+  closetOccasions: [
+    { key: 'daily',  label: '日常' },
+    { key: 'work',   label: '上班' },
+    { key: 'travel', label: '旅行' },
+    { key: 'party',  label: '聚会' },
+    { key: 'date',   label: '约会' },
+    { key: 'other',  label: '其他' },
+  ],
+
+  // 标签预设（通用）
+  studioTagPresets: ['Minimal', 'Korean', 'Business', 'Home', 'Recipe', 'Branding', 'Idea', 'Fitness', 'Travel'],
 
   // 库存分类
   inventory: [
