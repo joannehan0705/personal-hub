@@ -90,6 +90,7 @@ const BackupUtils = {
 
   /**
    * 导入数据（覆盖模式）
+   * 先清空数据库所有 store，再导入备份文件中的数据
    */
   async importOverwrite(data) {
     this.validate(data);
@@ -97,10 +98,16 @@ const BackupUtils = {
     // 先备份
     await this.backupBeforeImport();
 
-    const stores = Object.keys(data.data);
-    for (const store of stores) {
+    // 清空数据库中所有 store（包括备份文件里可能没有的新 store）
+    const allStores = this.getAllStoreNames();
+    for (const store of allStores) {
+      await window.db.clear(store);
+    }
+
+    // 然后导入备份文件中的数据
+    const importStores = Object.keys(data.data);
+    for (const store of importStores) {
       if (data.data[store] && Array.isArray(data.data[store])) {
-        await window.db.clear(store);
         const tx = window.db.transaction(store, 'readwrite');
         for (const record of data.data[store]) {
           await tx.store.put(record);
@@ -110,7 +117,7 @@ const BackupUtils = {
     }
 
     // 记录操作日志
-    await this.logOperation('import', `覆盖导入，共 ${stores.length} 个数据表`);
+    await this.logOperation('import', `覆盖导入，清空 ${allStores.length} 个表，导入 ${importStores.length} 个表的数据`);
   },
 
   /**

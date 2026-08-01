@@ -3,7 +3,7 @@
  * 缓存策略：Cache First，离线优�?
  */
 
-const CACHE_NAME = 'personal-hub-v23';
+const CACHE_NAME = 'personal-hub-v24';
 
 // 需要缓存的资源
 const ASSETS_TO_CACHE = [
