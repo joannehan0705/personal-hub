@@ -186,7 +186,7 @@ function AllowancePage() {
       }
       // 编辑收入分配后，也检查目标是否达标
       if (txType === 'income' && data.goalId) {
-        await checkAndAutoCompleteGoal(data.goalId);
+        await checkAndAutoCompleteGoal(data.goalId, txDate);
       }
       showToast('已更新', 'success');
     } else {
@@ -211,7 +211,7 @@ function AllowancePage() {
       }
       // 收入分配到目标后，检查是否达标
       if (txType === 'income' && data.goalId) {
-        await checkAndAutoCompleteGoal(data.goalId);
+        await checkAndAutoCompleteGoal(data.goalId, txDate);
       }
       showToast(txType === 'income' ? '收入已记录' : '支出已记录', 'success');
     }
@@ -220,7 +220,8 @@ function AllowancePage() {
   };
 
   // ===== 检查储蓄目标是否已达标，自动标记完成 =====
-  const checkAndAutoCompleteGoal = async (goalId) => {
+  // completionDate: 让目标达标的那笔收入的日期
+  const checkAndAutoCompleteGoal = async (goalId, completionDate) => {
     if (!goalId) return;
     const goal = await DAO.allowanceGoals.getById(goalId);
     if (!goal || goal.status !== 'in_progress') return;
@@ -228,7 +229,7 @@ function AllowancePage() {
     if (saved >= (goal.target || 0) && goal.target > 0) {
       await DAO.allowanceGoals.update(goalId, {
         status: 'completed',
-        completedDate: DateUtils.today(),
+        completedDate: completionDate || DateUtils.today(),
         completedAt: new Date().toISOString(),
       });
       showToast(`🎉 储蓄目标「${goal.name}」已达标！`, 'success');
