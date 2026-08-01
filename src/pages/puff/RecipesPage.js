@@ -8,7 +8,6 @@ const { createElement: h, useState, useEffect } = React;
 function RecipesPage() {
   const { dataVersion, refreshData, showToast } = useApp();
   const [recipes, setRecipes] = useState([]);
-  const [products, setProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
 
@@ -16,7 +15,6 @@ function RecipesPage() {
   const [name, setName] = useState('');
   const [steps, setSteps] = useState('');
   const [servings, setServings] = useState('');
-  const [productId, setProductId] = useState('');
   const [ingredients, setIngredients] = useState([]);
   const [notes, setNotes] = useState('');
 
@@ -25,13 +23,9 @@ function RecipesPage() {
   }, [dataVersion]);
 
   const loadData = async () => {
-    const [recipeData, productData] = await Promise.all([
-      DAO.recipes.getAll(),
-      DAO.products.getAll(),
-    ]);
+    const recipeData = await DAO.recipes.getAll();
     recipeData.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
     setRecipes(recipeData);
-    setProducts(productData);
   };
 
   const openForm = (recipe) => {
@@ -40,7 +34,6 @@ function RecipesPage() {
       setName(recipe.name || '');
       setSteps(recipe.steps || '');
       setServings(recipe.servings != null ? String(recipe.servings) : '');
-      setProductId(recipe.productId || '');
       setIngredients(recipe.ingredients || []);
       setNotes(recipe.notes || '');
     } else {
@@ -48,7 +41,6 @@ function RecipesPage() {
       setName('');
       setSteps('');
       setServings('');
-      setProductId('');
       setIngredients([]);
       setNotes('');
     }
@@ -73,7 +65,6 @@ function RecipesPage() {
       name: name.trim(),
       steps: steps.trim(),
       servings: parseInt(servings) || 1,
-      productId: productId || null,
       ingredients,
       notes: notes.trim(),
       totalCost,
@@ -111,15 +102,7 @@ function RecipesPage() {
     setIngredients(ingredients.filter((_, i) => i !== index));
   };
 
-  const getProductName = (pid) => {
-    if (!pid) return null;
-    const p = products.find(p => p.id === pid);
-    return p ? p.name : null;
-  };
-
   const renderRecipe = (recipe) => {
-    const productName = getProductName(recipe.productId);
-
     return h('div', {
       key: recipe.id,
       style: {
@@ -142,10 +125,8 @@ function RecipesPage() {
           h('div', {
             style: {
               fontSize: '13px', color: 'var(--color-text-tertiary)', marginTop: '4px',
-              display: 'flex', flexWrap: 'wrap', gap: 'var(--space-sm)',
             }
           },
-            productName && h('span', null, `关联: ${productName}`),
             h('span', null, `${recipe.servings || 1} 份`),
           ),
           (recipe.totalCost != null && recipe.totalCost > 0) && h('div', {
@@ -200,37 +181,6 @@ function RecipesPage() {
           placeholder: '输入配方名称',
           required: true,
         }),
-
-        // 关联产品
-        products.length > 0 && h('div', null,
-          h('label', {
-            style: {
-              fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)',
-              paddingLeft: 'var(--space-xs)', display: 'block', marginBottom: 'var(--space-xs)',
-            }
-          }, '关联产品'),
-          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' } },
-            h('button', {
-              onClick: () => { Haptics.selection(); setProductId(''); },
-              style: {
-                padding: '8px 14px', borderRadius: 'var(--radius-pill)', fontSize: '14px', fontWeight: 500,
-                backgroundColor: !productId ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
-                color: !productId ? '#FFFFFF' : 'var(--color-text-secondary)',
-              }
-            }, '无'),
-            products.map(p =>
-              h('button', {
-                key: p.id,
-                onClick: () => { Haptics.selection(); setProductId(p.id); },
-                style: {
-                  padding: '8px 14px', borderRadius: 'var(--radius-pill)', fontSize: '14px', fontWeight: 500,
-                  backgroundColor: productId === p.id ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
-                  color: productId === p.id ? '#FFFFFF' : 'var(--color-text-secondary)',
-                }
-              }, p.name)
-            )
-          )
-        ),
 
         h(Input, {
           label: '份数',
