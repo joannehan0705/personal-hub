@@ -445,7 +445,11 @@ class PetsDAO extends BaseDAO {
     const all = await this.getAll();
     return all
       .filter(r => r.nextDate && r.nextDate >= today && r.nextDate <= endDate)
-      .sort((a, b) => (a.nextDate || '').localeCompare(b.nextDate || ''));
+      .sort((a, b) => {
+        const dc = (a.nextDate || '').localeCompare(b.nextDate || '');
+        if (dc !== 0) return dc;
+        return (a.time || '').localeCompare(b.time || '');
+      });
   }
 
   async search(keyword) {

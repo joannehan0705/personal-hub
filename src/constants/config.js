@@ -6,7 +6,7 @@
 const APP_CONFIG = {
   // 应用信息
   name: 'Personal Hub',
-  version: '2.20.0',
+  version: '2.21.0',
 
   // 数据库
   dbName: 'personal-hub-db',
@@ -108,8 +108,8 @@ const APP_CONFIG = {
 
   // 首页卡片
   homeSections: [
-    'overview', 'todo', 'someday', 'shopping',
-    'finance', 'alex', 'pets', 'orders'
+    'overview', 'today', 'inbox', 'upcoming',
+    'alex', 'pets', 'shopping', 'production'
   ],
 
   // 搜索历史最大保存数

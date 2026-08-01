@@ -1,13 +1,27 @@
 (function() {
 /**
- * Personal Hub — V2 首页（卡片网格布局）
- * 2列圆角卡片tile，韩式简约风格
+ * Personal Hub — V3 首页 Dashboard
+ * 每天打开的工作台，只显示今天需要关注的内容
  */
 
-const { createElement: h } = React;
+const { createElement: h, useState, useEffect } = React;
 
 function HomePage() {
-  const { dataVersion } = useApp();
+  const { dataVersion, dispatch, ACTIONS } = useApp();
+  const [hasTodayOrders, setHasTodayOrders] = useState(false);
+
+  useEffect(() => {
+    checkTodayOrders();
+  }, [dataVersion]);
+
+  const checkTodayOrders = async () => {
+    const today = DateUtils.today();
+    const all = await DAO.orders.getAll();
+    const todayOrders = all.filter(
+      o => o.pickupDate === today && o.status !== 'cancelled'
+    );
+    setHasTodayOrders(todayOrders.length > 0);
+  };
 
   const gridStyle = {
     display: 'grid',
@@ -16,7 +30,6 @@ function HomePage() {
     padding: '0 var(--space-lg)',
   };
 
-  // 单列的全宽概览卡片
   const fullWidthStyle = {
     padding: '0 var(--space-lg)',
     marginBottom: 'var(--space-md)',
@@ -26,32 +39,43 @@ function HomePage() {
     h(NavBar, {
       title: DateUtils.fullDate(),
       showBack: false,
+      rightAction: h('button', {
+        onClick: () => { Haptics.medium(); dispatch({ type: ACTIONS.OPEN_QUICK_ADD }); },
+        style: {
+          width: '32px', height: '32px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }
+      }, h(Icon, { name: 'plus', size: 22, color: 'var(--color-accent)', strokeWidth: 2.5 }))
     }),
 
     h('div', { className: 'scroll-container page' },
-      // 概览 — 全宽
+      // 顶部 Summary
       h('div', { style: fullWidthStyle },
         h(OverviewCard)
       ),
 
       // 2列卡片网格
       h('div', { style: gridStyle },
-        // 第一行: 待办 + 时间待定
-        h(TodoCard),
-        h(SomedayCard),
+        // 第一行: Today + Inbox
+        h(TodayCard),
+        h(InboxCard),
 
-        // 第二行: 购物 + 记账
-        h(ShoppingCard),
-        h(FinanceCard),
-
-        // 第三行: Alex + 宠物
+        // 第二行: Upcoming + Alex
+        h(UpcomingCard),
         h(AlexCard),
-        h(PetCard),
 
-        // 第四行: 泡芙订单 + 日历
-        h(OrderCard),
-        h(CalendarCard),
+        // 第三行: Pet + Shopping
+        h(PetCard),
+        h(ShoppingCard),
       ),
+
+      // 第四行: Today's Production (全宽，仅有订单时显示)
+      hasTodayOrders && h('div', {
+        style: {
+          padding: '0 var(--space-lg)',
+          marginTop: 'var(--space-md)',
+        }
+      }, h(ProductionCard)),
 
       // 底部留白
       h('div', { style: { height: 'var(--space-2xl)' } })

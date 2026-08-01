@@ -11,6 +11,7 @@ function PetForm({ open, onClose, record, petName: initialPet, recordType: initi
   const [type, setType] = useState('medical');
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(DateUtils.today());
+  const [time, setTime] = useState('');
   const [cost, setCost] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -48,6 +49,7 @@ function PetForm({ open, onClose, record, petName: initialPet, recordType: initi
         setType(record.type || 'medical');
         setTitle(record.title || '');
         setDate(record.date || DateUtils.today());
+        setTime(record.time || '');
         setCost(record.cost ? String(record.cost) : '');
         setNotes(record.notes || '');
         setHospital(record.hospital || '');
@@ -74,7 +76,7 @@ function PetForm({ open, onClose, record, petName: initialPet, recordType: initi
       } else {
         setPetName(initialPet || 'cookie');
         setType(initialType || 'medical');
-        setTitle(''); setDate(DateUtils.today()); setCost(''); setNotes('');
+        setTitle(''); setDate(DateUtils.today()); setTime(''); setCost(''); setNotes('');
         setHospital(''); setDiagnosis(''); setMedication('');
         setVaccineName(''); setNextDate(''); setLocation('');
         setItemName(''); setBrand('');
@@ -101,6 +103,7 @@ function PetForm({ open, onClose, record, petName: initialPet, recordType: initi
       type,
       title: title.trim(),
       date,
+      time: time || null,
       cost: parseFloat(cost) || 0,
       notes: notes.trim(),
       ...(type === 'medical' ? {
@@ -246,6 +249,9 @@ function PetForm({ open, onClose, record, petName: initialPet, recordType: initi
 
       // 日期（weekly/biweekly 时不显示，用 weekday 代替）
       showDate && h(Input, { label: '日期', value: date, onChange: setDate, type: 'date' }),
+
+      // 时间（可选）
+      showDate && h(Input, { label: '时间（可选）', value: time, onChange: setTime, type: 'time' }),
 
       // recurring 结束日期
       showRecurring && recurring !== 'none' && h(Input, {

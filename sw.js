@@ -3,7 +3,7 @@
  * 缓存策略：index.html 网络优先，其他资源 Cache First + 后台更新
  */
 
-const CACHE_NAME = 'personal-hub-v34';
+const CACHE_NAME = 'personal-hub-v35';
 
 // 需要缓存的资源
 const ASSETS_TO_CACHE = [
@@ -74,6 +74,10 @@ const ASSETS_TO_CACHE = [
   './src/pages/puff/ProductSelectPage.js',
   './src/pages/home/sections/OverviewCard.js',
   './src/pages/home/sections/TodoSection.js',
+  './src/pages/home/sections/TodayCard.js',
+  './src/pages/home/sections/InboxCard.js',
+  './src/pages/home/sections/UpcomingCard.js',
+  './src/pages/home/sections/ProductionCard.js',
   './src/pages/home/HomePage.js',
   './src/pages/studio/StudioPage.js',
   './src/pages/studio/StudioForm.js',
