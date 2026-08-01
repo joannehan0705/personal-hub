@@ -37,10 +37,11 @@ function StudioDetail({ open, onClose, note, onEdit, onToggleFavorite, onShare, 
   };
 
   const actionBtnStyle = (color) => ({
-    flex: 1, padding: '12px', borderRadius: 'var(--radius-sm)',
-    backgroundColor: 'var(--color-bg-subtle)', fontSize: '14px',
-    fontWeight: 500, color: color || 'var(--color-text-primary)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+    width: '44px', height: '44px', borderRadius: 'var(--radius-md)',
+    backgroundColor: 'var(--color-bg-subtle)', fontSize: '20px',
+    color: color || 'var(--color-text-primary)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
   });
 
   return h(Sheet, { open, onClose, title: '灵感详情' },
@@ -185,24 +186,25 @@ function StudioDetail({ open, onClose, note, onEdit, onToggleFavorite, onShare, 
       // ===== 操作按钮区 =====
       h('div', {
         style: {
-          display: 'flex', gap: 'var(--space-xs)', flexWrap: 'wrap',
+          display: 'flex', gap: 'var(--space-md)',
           paddingTop: 'var(--space-lg)',
+          justifyContent: 'center',
         }
       },
         h('button', {
           onClick: () => { Haptics.light(); onEdit(); },
           style: actionBtnStyle('var(--color-accent)'),
-        }, '✏️ 编辑'),
+        }, '✏️'),
 
         h('button', {
           onClick: () => { Haptics.light(); onToggleFavorite(); },
           style: actionBtnStyle(note.favorite ? 'var(--color-accent)' : null),
-        }, note.favorite ? '⭐ 已收藏' : '☆ 收藏'),
+        }, note.favorite ? '⭐' : '☆'),
 
         h('button', {
           onClick: () => { Haptics.light(); onShare(); },
           style: actionBtnStyle(),
-        }, '📤 分享'),
+        }, '📤'),
 
         h('button', {
           onClick: () => {
@@ -210,7 +212,7 @@ function StudioDetail({ open, onClose, note, onEdit, onToggleFavorite, onShare, 
             viewMode === 'archived' ? onUnarchive() : onArchive();
           },
           style: actionBtnStyle(),
-        }, viewMode === 'archived' ? '📥 恢复' : '📦 归档'),
+        }, viewMode === 'archived' ? '📥' : '📦'),
 
         h('button', {
           onClick: () => {
@@ -218,7 +220,7 @@ function StudioDetail({ open, onClose, note, onEdit, onToggleFavorite, onShare, 
             if (confirm('确定删除此灵感？')) onDelete();
           },
           style: actionBtnStyle('var(--color-deadline)'),
-        }, '🗑 删除'),
+        }, '🗑'),
       ),
     )
   );
