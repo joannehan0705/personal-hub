@@ -160,8 +160,8 @@ function PuffFinancePage() {
     }),
 
     h('div', { className: 'scroll-container page-with-action-bar' },
-      // 月份选择（累计模式下隐藏）
-      !allTimeMode && h('div', {
+      // 月份选择
+      h('div', {
         style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-lg)', padding: 'var(--space-sm) 0 var(--space-md)' }
       },
         h('button', { onClick: handlePrevMonth, style: { width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
