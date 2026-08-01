@@ -16,7 +16,7 @@ function initDB() {
   if (dbPromise) return dbPromise;
 
   dbPromise = idb.openDB(DB_NAME, DB_VERSION, {
-    upgrade(db, oldVersion) {
+    upgrade(db, oldVersion, newVersion, transaction) {
       // ===== todos =====
       if (!db.objectStoreNames.contains('todos')) {
         const store = db.createObjectStore('todos', { keyPath: 'id' });
@@ -119,9 +119,9 @@ function initDB() {
         store.createIndex('createdAt', 'createdAt');
         store.createIndex('favorite', 'favorite');
         store.createIndex('tags', 'tags', { multiEntry: true });
-      } else if (oldVersion < 6) {
-        // V5→V6 升级：补充 favorite 和 tags 索引
-        const store = db.transaction('notes', 'readwrite').objectStore('notes');
+      } else if (oldVersion < 7) {
+        // V5/V6→V7 升级：补充 favorite 和 tags 索引
+        const store = transaction.objectStore('notes');
         if (!store.indexNames.contains('favorite')) {
           store.createIndex('favorite', 'favorite');
         }

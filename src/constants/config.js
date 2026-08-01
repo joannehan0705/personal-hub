@@ -10,7 +10,7 @@ const APP_CONFIG = {
 
   // 数据库
   dbName: 'personal-hub-db',
-  dbVersion: 6,
+  dbVersion: 7,
 
   // 本地存储键前缀
   storagePrefix: 'ph_',
