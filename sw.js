@@ -1,11 +1,11 @@
 /**
- * Personal Hub â€? Service Worker
- * ç¼“å­˜ç­–ç•¥ï¼šCache Firstï¼Œç¦»çº¿ä¼˜å…?
+ * Personal Hub ¡ª Service Worker
+ * »º´æ²ßÂÔ£ºindex.html ÍøÂçÓÅÏÈ£¬ÆäËû×ÊÔ´ Cache First + ºóÌ¨¸üÐÂ
  */
 
-const CACHE_NAME = 'personal-hub-v25';
+const CACHE_NAME = 'personal-hub-v26';
 
-// éœ€è¦ç¼“å­˜çš„èµ„æº
+// ÐèÒª»º´æµÄ×ÊÔ´
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -69,6 +69,7 @@ const ASSETS_TO_CACHE = [
   './src/pages/puff/SocialPage.js',
   './src/pages/puff/PuffFinancePage.js',
   './src/pages/puff/PuffTransactionForm.js',
+  './src/pages/puff/PuffStatsPage.js',
   './src/pages/puff/MenuPage.js',
   './src/pages/puff/MenuForm.js',
   './src/pages/home/sections/OverviewCard.js',
@@ -84,21 +85,27 @@ const ASSETS_TO_CACHE = [
   './src/pages/settings/IconCustomizePage.js',
   './src/pages/settings/AboutPage.js',
   './src/app.js',
-  // CDN èµ„æº
+  // CDN ×ÊÔ´
   'https://unpkg.com/react@18.3.1/umd/react.production.min.js',
   'https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js',
   'https://unpkg.com/idb@8.0.0/build/umd.js',
 ];
 
-// å®‰è£…ï¼šé¢„ç¼“å­˜æ‰€æœ‰èµ„æº?
+// ¼àÌýÏûÏ¢£ºÒ³ÃæÍ¨ÖªÐÂ SW Á¢¼´¼¤»î
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// °²×°£ºÔ¤»º´æËùÓÐ×ÊÔ´
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      // é€ä¸ªç¼“å­˜ï¼Œé¿å…ä¸€ä¸ªå¤±è´¥å¯¼è‡´å…¨éƒ¨å¤±è´?
       await Promise.all(
         ASSETS_TO_CACHE.map(url =>
           cache.add(url).catch(err => {
-            console.log('ç¼“å­˜å¤±è´¥:', url, err.message);
+            console.log('»º´æÊ§°Ü:', url, err.message);
           })
         )
       );
@@ -107,7 +114,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// æ¿€æ´»ï¼šæ¸…ç†æ—§ç¼“å­?
+// ¼¤»î£ºÇåÀí¾É»º´æ
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -117,15 +124,36 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// æ‹¦æˆªè¯·æ±‚ï¼šCache Firstï¼Œfallback to network
+// À¹½ØÇëÇó
 self.addEventListener('fetch', (event) => {
-  // é? GET è¯·æ±‚ç›´æŽ¥æ”¾è¡Œ
+  // ·Ç GET ÇëÇóÖ±½Ó·ÅÐÐ
   if (event.request.method !== 'GET') return;
 
+  const url = new URL(event.request.url);
+
+  // index.html ºÍµ¼º½ÇëÇó£ºÍøÂçÓÅÏÈ£¨È·±£Èë¿ÚÎÄ¼þ×ÜÊÇ×îÐÂ£©
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html') {
+    event.respondWith(
+      fetch(event.request).then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        return response;
+      }).catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  // sw.js ±¾Éí£ºÊ¼ÖÕ´ÓÍøÂç»ñÈ¡
+  if (url.pathname === '/sw.js') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // ÆäËû×ÊÔ´£ºCache First£¬ºóÌ¨¾²Ä¬¸üÐÂ
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) {
-        // åŽå°æ›´æ–°ç¼“å­˜
+        // ºóÌ¨¸üÐÂ»º´æ
         fetch(event.request).then(response => {
           if (response.ok) {
             const clone = response.clone();
@@ -135,7 +163,7 @@ self.addEventListener('fetch', (event) => {
         return cached;
       }
 
-      // æ— ç¼“å­˜ï¼Œä»Žç½‘ç»œèŽ·å?
+      // ÎÞ»º´æ£¬´ÓÍøÂç»ñÈ¡
       return fetch(event.request).then(response => {
         if (response.ok && (event.request.url.startsWith('http') || event.request.url.startsWith('https'))) {
           const clone = response.clone();
@@ -143,7 +171,7 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       }).catch(() => {
-        // ç¦»çº¿ä¸”æ— ç¼“å­˜
+        // ÀëÏßÇÒÎÞ»º´æ
         if (event.request.destination === 'document') {
           return caches.match('./index.html');
         }
