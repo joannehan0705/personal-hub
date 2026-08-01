@@ -113,7 +113,8 @@ function AlexCard() {
           records.slice(0, 3).map(r => {
             const cat = APP_CONFIG.alexCategories.find(c => c.key === r.category);
             const today = DateUtils.today();
-            const isToday = r.date === today;
+            const matchDate = r._matchDate || r.date;
+            const isToday = matchDate === today;
             return h('div', {
               key: r.id,
               style: {
@@ -142,7 +143,7 @@ function AlexCard() {
                   flexShrink: 0,
                 }
               },
-                (isToday ? (r.time ? FormatUtils.time(r.time) : '今天') : DateUtils.friendlyDate(r.date))
+                (isToday ? (r.time ? FormatUtils.time(r.time) : '今天') : DateUtils.friendlyDate(r._matchDate || r.date))
               )
             );
           })

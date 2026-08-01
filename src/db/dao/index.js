@@ -359,84 +359,75 @@ class AlexDAO extends BaseDAO {
     });
   }
 
+  // 检查某条记录在指定日期是否匹配（recurring 逻辑）
+  _matchesOnDate(r, dateStr) {
+    const checkDate = new Date(dateStr + 'T00:00:00');
+    const checkWeekday = checkDate.getDay();
+
+    // 非 recurring：日期精确匹配
+    if (!r.recurring || r.recurring === 'none') {
+      return r.date === dateStr;
+    }
+
+    const startDateStr = r.recurringStartDate || r.date;
+    if (!startDateStr) return false;
+    const startDate = new Date(startDateStr + 'T00:00:00');
+
+    if (checkDate < startDate) return false;
+
+    if (r.recurringEndDate) {
+      const endDate = new Date(r.recurringEndDate + 'T00:00:00');
+      if (checkDate > endDate) return false;
+    }
+
+    if (r.recurring === 'daily') return true;
+    if (r.recurring === 'weekly') return r.weekday === checkWeekday;
+    if (r.recurring === 'biweekly') {
+      if (r.weekday !== checkWeekday) return false;
+      const diffDays = Math.floor((checkDate - startDate) / (1000 * 60 * 60 * 24));
+      const diffWeeks = Math.floor(diffDays / 7);
+      return diffWeeks % 2 === 0;
+    }
+    if (r.recurring === 'monthly') {
+      return checkDate.getDate() === startDate.getDate();
+    }
+    return false;
+  }
+
   async getToday() {
     const today = DateUtils.today();
-    const todayDate = new Date(today + 'T00:00:00');
-    const todayWeekday = todayDate.getDay(); // 0=周日 ... 6=周六
     const all = await this.getAll();
-    return all.filter(r => {
-      // 非 recurring：日期匹配今天
-      if (!r.recurring || r.recurring === 'none') {
-        return r.date === today;
-      }
-
-      // 获取开始日期：优先 recurringStartDate，其次 date
-      const startDateStr = r.recurringStartDate || r.date;
-      if (!startDateStr) return false;
-      const startDate = new Date(startDateStr + 'T00:00:00');
-
-      // 如果今天早于开始日期，不显示
-      if (todayDate < startDate) return false;
-
-      // 检查结束日期
-      if (r.recurringEndDate) {
-        const endDate = new Date(r.recurringEndDate + 'T00:00:00');
-        if (todayDate > endDate) return false;
-      }
-
-      // daily：每天都显示（从开始日期起）
-      if (r.recurring === 'daily') return true;
-
-      // weekly：weekday 匹配今天
-      if (r.recurring === 'weekly') {
-        return r.weekday === todayWeekday;
-      }
-
-      // biweekly：weekday 匹配，且本周是间隔周
-      if (r.recurring === 'biweekly') {
-        if (r.weekday !== todayWeekday) return false;
-        // 计算从开始日期到今天过了多少周，偶数周才显示
-        const diffDays = Math.floor((todayDate - startDate) / (1000 * 60 * 60 * 24));
-        const diffWeeks = Math.floor(diffDays / 7);
-        return diffWeeks % 2 === 0;
-      }
-
-      // monthly：日期（几号）匹配今天
-      if (r.recurring === 'monthly') {
-        return todayDate.getDate() === startDate.getDate();
-      }
-      return false;
-    });
+    return all.filter(r => this._matchesOnDate(r, today));
   }
 
   async getUpcoming(days = 7) {
     const today = DateUtils.today();
-    const endDate = DateUtils.addDays(today, days);
-    const todayRecords = await this.getToday();
-
-    // 未来非 recurring 的事项
     const all = await this.getAll();
-    const futureRecords = all.filter(r => {
-      if (r.recurring && r.recurring !== 'none') return false;
-      return r.date && r.date > today && r.date <= endDate;
+    const results = [];
+    const seen = new Set();
+
+    // 遍历未来 days 天
+    for (let i = 0; i <= days; i++) {
+      const dateStr = i === 0 ? today : DateUtils.addDays(today, i);
+      for (const r of all) {
+        if (this._matchesOnDate(r, dateStr)) {
+          // 去重：同一条记录同一天不重复
+          const key = r.id + '_' + dateStr;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          results.push({ ...r, _matchDate: dateStr });
+        }
+      }
+    }
+
+    // 按匹配日期 + 时间排序
+    results.sort((a, b) => {
+      const dc = (a._matchDate || '').localeCompare(b._matchDate || '');
+      if (dc !== 0) return dc;
+      return (a.time || '').localeCompare(b.time || '');
     });
 
-    // 合并去重 + 排序
-    const seen = new Set();
-    const merged = [...todayRecords, ...futureRecords]
-      .filter(r => {
-        if (seen.has(r.id)) return false;
-        seen.add(r.id);
-        return true;
-      })
-      .sort((a, b) => {
-        const da = a.date || '';
-        const db = b.date || '';
-        if (da !== db) return da.localeCompare(db);
-        return (a.time || '').localeCompare(b.time || '');
-      });
-
-    return merged;
+    return results;
   }
 
   async search(keyword) {
