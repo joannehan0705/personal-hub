@@ -8,23 +8,14 @@
 const { createElement: h, useState, useEffect } = React;
 
 function OrdersPage() {
-  const { dataVersion, refreshData, route, navigate } = useApp();
+  const { dataVersion, refreshData, navigate } = useApp();
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState('pending');
   const [subFilter, setSubFilter] = useState('all');
   const [subSelection, setSubSelection] = useState(''); // pickupPointId 或 productId
-  const [showForm, setShowForm] = useState(false);
-  const [editingOrder, setEditingOrder] = useState(null);
   const [detailOrder, setDetailOrder] = useState(null);
   const [pickupPoints, setPickupPoints] = useState([]);
   const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    if (window.location.hash.includes('new=1')) {
-      setShowForm(true);
-      setEditingOrder(null);
-    }
-  }, [route]);
 
   useEffect(() => {
     loadOrders();
@@ -75,16 +66,8 @@ function OrdersPage() {
     displayOrders = orders.filter(o => o.items && o.items.some(i => i.productId === subSelection));
   }
 
-  const handleCloseForm = () => {
-    setShowForm(false);
-    setEditingOrder(null);
-    if (window.location.hash.includes('new=1')) navigate('/puff/orders');
-    refreshData();
-  };
-
   const handleEdit = (order) => {
-    setEditingOrder(order);
-    setShowForm(true);
+    navigate('/puff/orders/edit?id=' + order.id);
   };
 
   const filters = [
@@ -167,7 +150,7 @@ function OrdersPage() {
     h(NavBar, {
       title: '订单', showBack: true,
       rightAction: h('button', {
-        onClick: () => { Haptics.light(); setEditingOrder(null); setShowForm(true); },
+        onClick: () => { Haptics.light(); navigate('/puff/orders/new'); },
         style: { width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }
       }, h(Icon, { name: 'plus', size: 24, color: 'var(--color-accent)' }))
     }),
@@ -288,11 +271,6 @@ function OrdersPage() {
         : h('div', null, displayOrders.map(renderOrder))
     ),
 
-    h(OrderForm, {
-      open: showForm,
-      onClose: handleCloseForm,
-      order: editingOrder,
-    }),
     h(OrderDetail, {
       order: detailOrder,
       onClose: () => setDetailOrder(null),
