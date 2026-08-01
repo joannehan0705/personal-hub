@@ -283,28 +283,13 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
           )
         ),
 
-        // 重复截止日期（daily 不需要）
-        recurring !== 'none' && h('div', null,
-          h('div', {
-            style: { fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '4px' }
-          }, '重复截止日期（可选，留空则无截止日期，持续到取消为止）'),
-          h('input', {
-            type: 'date',
-            value: recurringEndDate,
-            onChange: (e) => setRecurringEndDate(e.target.value),
-            style: {
-              width: '100%',
-              padding: '10px 14px',
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              outline: 'none',
-              backgroundColor: 'var(--color-bg-card)',
-              fontSize: '16px',
-              color: 'var(--color-text-primary)',
-              boxSizing: 'border-box',
-            }
-          })
-        )
+        // 重复截止日期（可选）
+        recurring !== 'none' && h(Input, {
+          label: '重复截止日期（留空则无截止日期）',
+          value: recurringEndDate,
+          onChange: setRecurringEndDate,
+          type: 'date',
+        }),
       ),
 
       // ===== Medical 特有字段 =====
