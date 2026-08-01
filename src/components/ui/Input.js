@@ -54,7 +54,33 @@ function Input({ label, value = '', onChange, placeholder, type = 'text', multil
     label && h('label', { style: labelStyle }, label),
     multiline
       ? h('textarea', { ...commonProps, rows, style: { ...inputBase, lineHeight: '1.5' } })
-      : h('input', { ...commonProps, type, style: inputBase })
+      : h('div', { style: { position: 'relative', width: '100%' } },
+          h('input', { ...commonProps, type, style: type === 'date' ? { ...inputBase, paddingRight: '36px' } : inputBase }),
+          // date 类型且有值时显示清空按钮
+          type === 'date' && value && h('button', {
+            type: 'button',
+            onClick: () => { onChange && onChange(''); },
+            style: {
+              position: 'absolute',
+              right: '8px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              border: 'none',
+              backgroundColor: 'var(--color-bg-subtle)',
+              color: 'var(--color-text-tertiary)',
+              fontSize: '16px',
+              lineHeight: 1,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+            }
+          }, '×')
+        )
   );
 }
 
