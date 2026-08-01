@@ -42,7 +42,12 @@ function statItem(label, value, sub) {
 // ===== 生活记账 Review =====
 
 function LifeReviewSection({ data, range }) {
-  if (!data || !data.transactions || data.transactions.length === 0) return null;
+  if (!data || !data.transactions || data.transactions.length === 0) {
+    return h('div', null,
+      h('div', { style: SECTION_TITLE_STYLE }, 'Summary'),
+      h('div', { style: { textAlign: 'center', padding: 'var(--space-3xl)', color: 'var(--color-text-tertiary)', fontSize: '14px' } }, '这个时间段内没有生活记账数据'),
+    );
+  }
 
   const { summary, prevSummary, categorySummary, trendData, topSpending, days } = data;
   const dailyAvg = days > 0 ? summary.expense / days : 0;
@@ -118,7 +123,12 @@ function LifeReviewSection({ data, range }) {
 // ===== 泡芙记账 Review =====
 
 function PuffFinanceReviewSection({ data, range }) {
-  if (!data || !data.transactions || data.transactions.length === 0) return null;
+  if (!data || !data.transactions || data.transactions.length === 0) {
+    return h('div', null,
+      h('div', { style: SECTION_TITLE_STYLE }, 'Summary'),
+      h('div', { style: { textAlign: 'center', padding: 'var(--space-3xl)', color: 'var(--color-text-tertiary)', fontSize: '14px' } }, '这个时间段内没有泡芙记账数据'),
+    );
+  }
 
   const { summary, prevSummary, categorySummary, revenueTrend, expenseTrend, profitTrend } = data;
   const profit = summary.balance;
@@ -173,7 +183,12 @@ function PuffFinanceReviewSection({ data, range }) {
 // ===== 泡芙订单 Review =====
 
 function OrdersReviewSection({ data, range }) {
-  if (!data || !data.orders || data.orders.length === 0) return null;
+  if (!data || !data.orders || data.orders.length === 0) {
+    return h('div', null,
+      h('div', { style: SECTION_TITLE_STYLE }, 'Summary'),
+      h('div', { style: { textAlign: 'center', padding: 'var(--space-3xl)', color: 'var(--color-text-tertiary)', fontSize: '14px' } }, '这个时间段内没有订单数据'),
+    );
+  }
 
   const { summary, flavorRanking, pickupDistribution, trendData, productionSummary } = data;
   const medals = ['🥇', '🥈', '🥉'];

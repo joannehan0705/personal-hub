@@ -83,7 +83,7 @@ function ReviewPage() {
   const carouselCards = [];
 
   // 生活记账
-  if (data && data.personal.summary.expense > 0) {
+  if (data) {
     const s = data.personal.summary;
     const ps = data.personal.prevSummary;
     const diff = s.expense - ps.expense;
@@ -116,7 +116,7 @@ function ReviewPage() {
   }
 
   // 泡芙记账
-  if (data && (data.puff.summary.income > 0 || data.puff.summary.expense > 0)) {
+  if (data) {
     const s = data.puff.summary;
     const ps = data.puff.prevSummary;
     const diff = s.balance - ps.balance;
@@ -153,7 +153,7 @@ function ReviewPage() {
   }
 
   // 泡芙订单
-  if (data && data.orders.summary.totalOrders > 0) {
+  if (data) {
     const s = data.orders.summary;
     const ps = data.orders.prevSummary;
     const diff = s.totalOrders - ps.totalOrders;
@@ -359,7 +359,7 @@ function ReviewPage() {
         activeTab === 'orders' && h(ReviewSections.OrdersReviewSection, { data: data.orders, range }),
 
         // 全部无数据
-        carouselCards.length === 0 && h('div', {
+        data && data.personal.transactions.length === 0 && data.puff.transactions.length === 0 && data.orders.orders.length === 0 && h('div', {
           style: { textAlign: 'center', padding: 'var(--space-4xl)', color: 'var(--color-text-tertiary)', fontSize: '14px' },
         }, '这个时间段内没有数据'),
       ) : null,
