@@ -6,7 +6,7 @@
 const APP_CONFIG = {
   // 应用信息
   name: 'Personal Hub',
-  version: '2.21.1',
+  version: '2.22.0',
 
   // 数据库
   dbName: 'personal-hub-db',

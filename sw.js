@@ -3,7 +3,7 @@
  * 缓存策略：index.html 网络优先，其他资源 Cache First + 后台更新
  */
 
-const CACHE_NAME = 'personal-hub-v36';
+const CACHE_NAME = 'personal-hub-v37';
 
 // 需要缓存的资源
 const ASSETS_TO_CACHE = [
@@ -89,6 +89,10 @@ const ASSETS_TO_CACHE = [
   './src/pages/settings/SettingsPage.js',
   './src/pages/settings/IconCustomizePage.js',
   './src/pages/settings/AboutPage.js',
+  './src/components/ui/Chart.js',
+  './src/pages/review/ReviewDataProvider.js',
+  './src/pages/review/ReviewSections.js',
+  './src/pages/review/ReviewPage.js',
   './src/app.js',
   // CDN 资源
   'https://unpkg.com/react@18.3.1/umd/react.production.min.js',

@@ -35,6 +35,7 @@ const ROUTES = [
   { pattern: /^\/settings\/icon/,           component: () => IconCustomizePage, tab: null },
   { pattern: /^\/settings\/about/,          component: () => AboutPage,    tab: null },
   { pattern: /^\/settings$/,                component: () => SettingsPage, tab: null },
+  { pattern: /^\/review/,                   component: () => ReviewPage,  tab: null },
 ];
 
 // ===== 路由匹配 =====

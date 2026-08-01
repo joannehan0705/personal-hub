@@ -13,6 +13,7 @@ const SIDEBAR_ITEMS = [
     { path: '/',              icon: 'home',     label: '首页',     color: '#5B8A8E' },
     { path: '/todo',          icon: 'checkCircle', label: '待办',  color: '#E8C547' },
     { path: '/shopping',      icon: 'cart',     label: '购物清单', color: '#6B9EC4' },
+    { path: '/review',        icon: 'finance',  label: 'Review',   color: '#5B8A8E' },
   ]},
   // 生活管理
   { section: 'life', label: '生活', items: [

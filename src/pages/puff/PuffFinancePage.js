@@ -1,7 +1,6 @@
 (function() {
 /**
  * Personal Hub — 泡芙品牌记账子模块（独立分类，scope='puff'）
- * V2 更新：整合累计统计，支持本月/累计切换
  */
 
 const { createElement: h, useState, useEffect } = React;
@@ -10,8 +9,6 @@ function PuffFinancePage() {
   const { dataVersion, refreshData, financeMonth, dispatch, ACTIONS, navigate, showToast } = useApp();
   const [transactions, setTransactions] = useState([]);
   const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 });
-  const [summaryMode, setSummaryMode] = useState('month'); // 'month' | 'allTime'
-  const [allTimeSummary, setAllTimeSummary] = useState({ income: 0, expense: 0, profit: 0 });
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState('expense');
   const [editingTx, setEditingTx] = useState(null);
@@ -23,21 +20,12 @@ function PuffFinancePage() {
   }, [dataVersion, financeMonth]);
 
   const loadData = async () => {
-    const [puffTx, sum, allPuffTx] = await Promise.all([
+    const [puffTx, sum] = await Promise.all([
       DAO.transactions.getByMonth(financeMonth, 'puff'),
       DAO.transactions.getMonthlySummary(financeMonth, 'puff'),
-      DAO.transactions.getAll('puff'),
     ]);
     setTransactions(puffTx);
     setSummary(sum);
-
-    // 累计统计：直接使用全部泡芙记账数据
-    let income = 0, expense = 0;
-    for (const t of allPuffTx) {
-      if (t.type === 'income') income += t.amount || 0;
-      else expense += t.amount || 0;
-    }
-    setAllTimeSummary({ income, expense, profit: income - expense });
   };
 
   const handlePrevMonth = () => {
@@ -103,8 +91,6 @@ function PuffFinancePage() {
   const catList = Object.values(catMap).sort((a, b) => b.actual - a.actual);
 
   // 当前展示的汇总数据
-  const currentSummary = summaryMode === 'month' ? summary : allTimeSummary;
-  const isAllTime = summaryMode === 'allTime';
 
   const renderTransaction = (tx) => {
     const cat = tx.type === 'income'
@@ -163,8 +149,8 @@ function PuffFinancePage() {
     }),
 
     h('div', { className: 'scroll-container page-with-action-bar' },
-      // 月份选择（仅在「本月」模式显示）
-      !isAllTime && h('div', {
+      // 月份选择
+      h('div', {
         style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-lg)', padding: 'var(--space-sm) 0 var(--space-md)' }
       },
         h('button', { onClick: handlePrevMonth, style: { width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
@@ -174,45 +160,21 @@ function PuffFinancePage() {
           h(Icon, { name: 'chevronRight', size: 22, color: 'var(--color-text-secondary)' }))
       ),
 
-      // 本月｜累计 切换
-      h('div', {
-        style: { display: 'flex', gap: 'var(--space-xs)', marginBottom: 'var(--space-md)' }
-      },
-        h('button', {
-          onClick: () => { Haptics.selection(); setSummaryMode('month'); },
-          style: {
-            flex: 1, padding: '8px', borderRadius: 'var(--radius-sm)',
-            fontSize: '14px', fontWeight: 500,
-            backgroundColor: summaryMode === 'month' ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
-            color: summaryMode === 'month' ? '#FFFFFF' : 'var(--color-text-secondary)',
-          }
-        }, '本月'),
-        h('button', {
-          onClick: () => { Haptics.selection(); setSummaryMode('allTime'); },
-          style: {
-            flex: 1, padding: '8px', borderRadius: 'var(--radius-sm)',
-            fontSize: '14px', fontWeight: 500,
-            backgroundColor: summaryMode === 'allTime' ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
-            color: summaryMode === 'allTime' ? '#FFFFFF' : 'var(--color-text-secondary)',
-          }
-        }, '累计')
-      ),
-
       // 统计概览
       h(Card, { style: { marginBottom: 'var(--space-md)' } },
         h('div', { style: { display: 'flex', justifyContent: 'space-around', textAlign: 'center' } },
           h('div', null,
-            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, isAllTime ? '累计总收入' : '收入'),
-            h('div', { style: { fontSize: '22px', fontWeight: 600, color: 'var(--color-complete)' }, className: 'numeric' }, FormatUtils.money(currentSummary.income))
+            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '收入'),
+            h('div', { style: { fontSize: '22px', fontWeight: 600, color: 'var(--color-complete)' }, className: 'numeric' }, FormatUtils.money(summary.income))
           ),
           h('div', null,
-            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, isAllTime ? '累计总支出' : '支出'),
-            h('div', { style: { fontSize: '22px', fontWeight: 600, color: 'var(--color-deadline)' }, className: 'numeric' }, FormatUtils.money(currentSummary.expense))
+            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '支出'),
+            h('div', { style: { fontSize: '22px', fontWeight: 600, color: 'var(--color-deadline)' }, className: 'numeric' }, FormatUtils.money(summary.expense))
           ),
           h('div', null,
-            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, isAllTime ? '累计总盈利' : '利润'),
-            h('div', { style: { fontSize: '22px', fontWeight: 600, color: currentSummary.balance >= 0 || currentSummary.profit >= 0 ? 'var(--color-accent)' : 'var(--color-deadline)' }, className: 'numeric' },
-              FormatUtils.money(isAllTime ? currentSummary.profit : currentSummary.balance)
+            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '利润'),
+            h('div', { style: { fontSize: '22px', fontWeight: 600, color: summary.balance >= 0 ? 'var(--color-accent)' : 'var(--color-deadline)' }, className: 'numeric' },
+              FormatUtils.money(summary.balance)
             )
           ),
         )
@@ -245,7 +207,7 @@ function PuffFinancePage() {
       // 按日期视图
       viewMode === 'date' && (
         transactions.length === 0
-          ? h(EmptyState, { icon: '🧁', title: isAllTime ? '还没有泡芙收支记录' : '本月还没有泡芙收支记录', subtitle: '点击下方按钮记录' })
+          ? h(EmptyState, { icon: '🧁', title: '本月还没有泡芙收支记录', subtitle: '点击下方按钮记录' })
           : h('div', null,
               dates.map(date =>
                 h('div', { key: date },
@@ -264,7 +226,7 @@ function PuffFinancePage() {
       // 按分类视图
       viewMode === 'category' && (
         transactions.length === 0
-          ? h(EmptyState, { icon: '🧁', title: isAllTime ? '还没有泡芙收支记录' : '本月还没有泡芙收支记录', subtitle: '点击下方按钮记录' })
+          ? h(EmptyState, { icon: '🧁', title: '本月还没有泡芙收支记录', subtitle: '点击下方按钮记录' })
           : h('div', null,
               catList.map(cat => {
                 const isSelected = selectedCategory === cat.key;
