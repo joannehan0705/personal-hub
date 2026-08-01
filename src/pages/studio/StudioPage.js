@@ -197,7 +197,7 @@ function StudioPage() {
   const formatDate = (iso) => {
     if (!iso) return '';
     const d = new Date(iso);
-    return `${MONTHS_EN[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    return `${MONTHS_EN[d.getMonth()]} ${d.getDate()}`;
   };
 
   // 分类切换
@@ -289,7 +289,7 @@ function StudioPage() {
           // 日期
           h('div', {
             style: { fontSize: '12px', color: 'var(--color-text-tertiary)', marginTop: '4px' }
-          }, formatDate(note.createdAt ? note.createdAt.slice(0, 10) : ''))
+          }, formatDate(note.createdAt))
         ),
 
         // 右侧：收藏 + 菜单

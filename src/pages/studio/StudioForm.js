@@ -19,6 +19,7 @@ function StudioForm({ open, onClose, note }) {
 
   // 标签输入
   const [tagInput, setTagInput] = useState('');
+  const [fullscreenEdit, setFullscreenEdit] = useState(false);
 
   // Closet 专属
   const [outfitTop, setOutfitTop] = useState('');
@@ -167,14 +168,32 @@ function StudioForm({ open, onClose, note }) {
         required: true,
       }),
 
-      h(Input, {
-        label: '内容',
-        value: content,
-        onChange: setContent,
-        placeholder: '写下你的灵感...',
-        multiline: true,
-        rows: 4,
-      }),
+      // 内容（可全屏编辑）
+      h('div', null,
+        h('div', {
+          style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xs)' },
+        },
+          h('label', {
+            style: { fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', paddingLeft: 'var(--space-xs)' },
+          }, '内容'),
+          h('button', {
+            onClick: () => { Haptics.light(); setFullscreenEdit(true); },
+            style: {
+              display: 'flex', alignItems: 'center', gap: '4px',
+              padding: '4px 10px', borderRadius: 'var(--radius-pill)',
+              backgroundColor: 'var(--color-bg-subtle)', border: 'none',
+              fontSize: '12px', color: 'var(--color-text-secondary)', cursor: 'pointer',
+            },
+          }, '⤢ 全屏编辑'),
+        ),
+        h(Input, {
+          value: content,
+          onChange: setContent,
+          placeholder: '写下你的灵感...',
+          multiline: true,
+          rows: 4,
+        }),
+      ),
 
       // 分类选择
       h('div', null,
@@ -342,7 +361,47 @@ function StudioForm({ open, onClose, note }) {
       ),
 
       h(Button, { fullWidth: true, onClick: handleSave }, note ? '保存' : '添加'),
-    )
+    ),
+
+    // 全屏编辑覆盖层
+    fullscreenEdit && h('div', {
+      style: {
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: 'var(--color-bg-base)', zIndex: 10000,
+        display: 'flex', flexDirection: 'column',
+        paddingTop: 'var(--safe-top)',
+      },
+    },
+      // 顶部栏
+      h('div', {
+        style: {
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: 'var(--space-sm) var(--space-lg)', height: '44px',
+          borderBottom: '1px solid var(--color-border-light)',
+          flexShrink: 0,
+        },
+      },
+        h('button', {
+          onClick: () => { Haptics.light(); setFullscreenEdit(false); },
+          style: { fontSize: '16px', color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer' },
+        }, '完成'),
+        h('span', { style: { fontSize: '16px', fontWeight: 600, color: 'var(--color-text-primary)' } }, '编辑内容'),
+        h('div', { style: { width: '44px' } }),
+      ),
+      // 编辑区
+      h('textarea', {
+        value: content,
+        onChange: (e) => setContent(e.target.value),
+        placeholder: '写下你的灵感...',
+        autoFocus: true,
+        style: {
+          flex: 1, width: '100%', border: 'none', outline: 'none', resize: 'none',
+          padding: 'var(--space-lg)', fontSize: '16px', lineHeight: 1.8,
+          fontFamily: 'inherit', color: 'var(--color-text-primary)',
+          backgroundColor: 'transparent',
+        },
+      }),
+    ),
   );
 }
 

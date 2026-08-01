@@ -117,7 +117,7 @@ const CATEGORIES = {
   ],
 
   // 标签预设（通用）
-  studioTagPresets: ['Minimal', 'Korean', 'Business', 'Home', 'Recipe', 'Branding', 'Idea', 'Fitness', 'Travel'],
+  studioTagPresets: ['Branding', 'Business', 'Home', 'Idea'],
 
   // 库存分类
   inventory: [
