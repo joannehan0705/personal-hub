@@ -8,10 +8,9 @@ const { createElement: h, useState, useEffect } = React;
 
 // 共用样式
 const SECTION_TITLE_STYLE = {
-  fontSize: '18px',
-  fontWeight: 700,
+  fontSize: '16px',
+  fontWeight: 600,
   color: 'var(--color-text-primary)',
-  marginTop: 'var(--space-2xl)',
   marginBottom: 'var(--space-md)',
   paddingLeft: 'var(--space-xs)',
 };
@@ -20,7 +19,8 @@ const SUBCARD_STYLE = {
   backgroundColor: 'var(--color-bg-card)',
   borderRadius: '16px',
   padding: 'var(--space-lg) var(--space-xl)',
-  boxShadow: 'var(--shadow-1)',
+  border: '1px solid var(--color-border-light)',
+  boxShadow: '0 1px 3px rgba(45,42,38,0.03)',
   marginBottom: 'var(--space-sm)',
 };
 
@@ -33,8 +33,8 @@ const STAT_ROW_STYLE = {
 
 function statItem(label, value, sub) {
   return h('div', { style: { flex: 1, minWidth: 0 } },
-    h('div', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '4px' } }, label),
-    h('div', { style: { fontSize: '22px', fontWeight: 700, color: 'var(--color-text-primary)' }, className: 'numeric' }, value),
+    h('div', { style: { fontSize: '11px', color: 'var(--color-text-tertiary)', marginBottom: '4px' } }, label),
+    h('div', { style: { fontSize: '20px', fontWeight: 600, color: '#2F2F2F' }, className: 'numeric' }, value),
     sub && h('div', { style: { fontSize: '11px', color: 'var(--color-text-tertiary)', marginTop: '2px' }, className: 'numeric' }, sub),
   );
 }
@@ -65,7 +65,7 @@ function LifeReviewSection({ data, range }) {
   const expPct = prevSummary.expense > 0 ? Math.round((expDiff / prevSummary.expense) * 100) : 0;
 
   return h('div', null,
-    h('div', { style: SECTION_TITLE_STYLE }, '🏠 生活记账'),
+    h('div', { style: SECTION_TITLE_STYLE }, 'Summary'),
     // Summary
     h('div', { style: SUBCARD_STYLE },
       h('div', { style: STAT_ROW_STYLE },
@@ -125,7 +125,7 @@ function PuffFinanceReviewSection({ data, range }) {
   const margin = summary.income > 0 ? Math.round((profit / summary.income) * 100) : 0;
 
   return h('div', null,
-    h('div', { style: SECTION_TITLE_STYLE }, '🧁 泡芙记账'),
+    h('div', { style: SECTION_TITLE_STYLE }, 'Summary'),
     // Summary
     h('div', { style: SUBCARD_STYLE },
       h('div', { style: STAT_ROW_STYLE },
@@ -179,7 +179,7 @@ function OrdersReviewSection({ data, range }) {
   const medals = ['🥇', '🥈', '🥉'];
 
   return h('div', null,
-    h('div', { style: SECTION_TITLE_STYLE }, '📦 泡芙订单'),
+    h('div', { style: SECTION_TITLE_STYLE }, 'Summary'),
     // Summary
     h('div', { style: SUBCARD_STYLE },
       h('div', { style: STAT_ROW_STYLE },

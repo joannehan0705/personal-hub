@@ -171,7 +171,54 @@ function LineChart({ data, labels, color = 'var(--color-accent)', height = 130 }
 }
 
 /**
- * SummaryCard — Apple Activity 风格大数字卡片
+ * ReviewSummaryCard — Apple Health 风格轻盈卡片
+ * props: { title, icon, decorIcon, accentColor, children }
+ * children 为自定义内容布局
+ */
+function ReviewSummaryCard({ title, icon, decorIcon, accentColor, children, onClick }) {
+  return h('div', {
+    onClick: onClick,
+    style: {
+      position: 'relative',
+      backgroundColor: 'var(--color-bg-card)',
+      borderRadius: '20px',
+      padding: 'var(--space-xl)',
+      border: '1px solid var(--color-border-light)',
+      boxShadow: '0 1px 3px rgba(45,42,38,0.03)',
+      overflow: 'hidden',
+      cursor: onClick ? 'pointer' : 'default',
+    },
+  },
+    // 右上装饰 Icon（极淡）
+    decorIcon && h('div', {
+      style: {
+        position: 'absolute',
+        top: '12px',
+        right: '14px',
+        fontSize: '32px',
+        opacity: 0.12,
+        pointerEvents: 'none',
+      },
+    }, decorIcon),
+    // 标题行
+    h('div', {
+      style: {
+        display: 'flex', alignItems: 'center', gap: 'var(--space-xs)',
+        marginBottom: 'var(--space-md)',
+      },
+    },
+      h('span', { style: { fontSize: '16px' } }, icon),
+      h('span', {
+        style: { fontSize: '14px', fontWeight: 600, color: accentColor || 'var(--color-text-primary)' },
+      }, title),
+    ),
+    // 内容
+    children,
+  );
+}
+
+/**
+ * SummaryCard — 兼容旧调用（保留）
  * items: [{ label, value, sub?, trendDir?, trendText?, trendGood? }]
  */
 function SummaryCard({ title, icon, items, accentColor }) {
@@ -179,38 +226,34 @@ function SummaryCard({ title, icon, items, accentColor }) {
     style: {
       backgroundColor: 'var(--color-bg-card)',
       borderRadius: '20px',
-      padding: 'var(--space-xl) var(--space-xl) var(--space-lg)',
-      boxShadow: 'var(--shadow-2)',
+      padding: 'var(--space-xl)',
+      border: '1px solid var(--color-border-light)',
+      boxShadow: '0 1px 3px rgba(45,42,38,0.03)',
       marginBottom: 'var(--space-md)',
     },
   },
-    // 标题行
     h('div', {
       style: {
-        display: 'flex', alignItems: 'center', gap: 'var(--space-sm)',
+        display: 'flex', alignItems: 'center', gap: 'var(--space-xs)',
         marginBottom: 'var(--space-lg)',
       },
     },
       h('span', { style: { fontSize: '18px' } }, icon),
       h('span', {
-        style: { fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)' },
+        style: { fontSize: '14px', fontWeight: 600, color: accentColor || 'var(--color-text-primary)' },
       }, title),
-      accentColor && h('div', {
-        style: { marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: accentColor },
-      }),
     ),
-    // 数据项
     h('div', {
       style: { display: 'flex', justifyContent: 'space-around', textAlign: 'center', gap: 'var(--space-xs)' },
     },
       items.map((item, i) => h('div', { key: i, style: { flex: 1, minWidth: 0 } },
         h('div', {
-          style: { fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '4px' },
+          style: { fontSize: '11px', color: 'var(--color-text-tertiary)', marginBottom: '4px' },
         }, item.label),
         h('div', {
           style: {
-            fontSize: '24px', fontWeight: 700, color: 'var(--color-text-primary)',
-            lineHeight: 1.1, className: 'numeric',
+            fontSize: '22px', fontWeight: 600, color: item.color || '#2F2F2F',
+            lineHeight: 1.1,
           },
           className: 'numeric',
         }, item.value),
@@ -220,7 +263,7 @@ function SummaryCard({ title, icon, items, accentColor }) {
         }, item.sub),
         item.trendDir && h('div', {
           style: {
-            fontSize: '11px', fontWeight: 600, marginTop: '2px',
+            fontSize: '11px', fontWeight: 500, marginTop: '2px',
             color: item.trendGood ? 'var(--color-complete)' : 'var(--color-deadline)',
           },
           className: 'numeric',
@@ -241,7 +284,8 @@ function TrendChart({ title, data, labels, color }) {
       backgroundColor: 'var(--color-bg-card)',
       borderRadius: '16px',
       padding: 'var(--space-lg) var(--space-xl)',
-      boxShadow: 'var(--shadow-1)',
+      border: '1px solid var(--color-border-light)',
+      boxShadow: '0 1px 3px rgba(45,42,38,0.03)',
       marginBottom: 'var(--space-sm)',
     },
   },
@@ -264,7 +308,8 @@ function DonutCard({ title, data, centerValue, centerLabel }) {
       backgroundColor: 'var(--color-bg-card)',
       borderRadius: '16px',
       padding: 'var(--space-lg) var(--space-xl)',
-      boxShadow: 'var(--shadow-1)',
+      border: '1px solid var(--color-border-light)',
+      boxShadow: '0 1px 3px rgba(45,42,38,0.03)',
       marginBottom: 'var(--space-sm)',
     },
   },
@@ -297,6 +342,7 @@ function DonutCard({ title, data, centerValue, centerLabel }) {
 window.DonutChart = DonutChart;
 window.LineChart = LineChart;
 window.SummaryCard = SummaryCard;
+window.ReviewSummaryCard = ReviewSummaryCard;
 window.TrendChart = TrendChart;
 window.DonutCard = DonutCard;
 window.CHART_COLORS = CHART_COLORS;
