@@ -1,10 +1,14 @@
 (function() {
 /**
- * Personal Hub — 泡芙菜单页面（V2）
- * 摘要卡片 + 产品选择页面入口
+ * Personal Hub — 泡芙菜单页面（V3）
+ * 现代极简 UI，单卡片设计，Capsule Chip 产品展示
  */
 
 const { createElement: h, useState, useEffect } = React;
+
+// 英文月份和星期
+const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WEEKDAYS_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function MenuPage() {
   const { dataVersion, refreshData, navigate, showToast } = useApp();
@@ -13,6 +17,7 @@ function MenuPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingMenu, setEditingMenu] = useState(null);
   const [viewMode, setViewMode] = useState('active');
+  const [openMenuId, setOpenMenuId] = useState(null); // 展开操作菜单的 menuId
 
   // 表单状态
   const [formDate, setFormDate] = useState(DateUtils.today());
@@ -28,6 +33,7 @@ function MenuPage() {
   };
 
   const openForm = (menu) => {
+    setOpenMenuId(null);
     if (menu) {
       setEditingMenu(menu);
       setFormDate(menu.date || DateUtils.today());
@@ -71,152 +77,258 @@ function MenuPage() {
     handleCloseForm();
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (menu) => {
+    setOpenMenuId(null);
     if (!confirm('确定删除此菜单？')) return;
-    await DAO.menus.delete(id);
+    await DAO.menus.delete(menu.id);
     Haptics.warning();
     showToast('已删除', 'success');
     refreshData();
   };
 
-  const handleArchive = async (id) => {
-    await DAO.menus.archive(id);
+  const handleArchive = async (menu) => {
+    setOpenMenuId(null);
+    await DAO.menus.archive(menu.id);
     Haptics.light();
     showToast('已归档', 'success');
     refreshData();
   };
 
-  const handleUnarchive = async (id) => {
-    await DAO.menus.unarchive(id);
+  const handleUnarchive = async (menu) => {
+    setOpenMenuId(null);
+    await DAO.menus.unarchive(menu.id);
     Haptics.light();
     showToast('已恢复', 'success');
     refreshData();
   };
 
-  const getProductNames = (ids, max = 3) => {
-    if (!ids || ids.length === 0) return null;
-    const names = ids.map(id => {
-      const p = products.find(p => p.id === id);
-      return p ? p.name : '未知';
-    });
-    if (names.length > max) {
-      return names.slice(0, max).join('、') + '……';
-    }
-    return names.join('、');
+  const getProductName = (id) => {
+    const p = products.find(p => p.id === id);
+    return p ? p.name : '未知';
   };
 
-  // 摘要卡片
-  const renderSummaryCard = (menu, type) => {
+  // 格式化日期为英文
+  const formatDateEn = (dateStr) => {
+    if (!dateStr) return { main: '', sub: '' };
+    const d = new Date(dateStr + 'T00:00:00');
+    return {
+      main: `${MONTHS_EN[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`,
+      sub: WEEKDAYS_EN[d.getDay()],
+    };
+  };
+
+  // Capsule Chip
+  const renderChip = (text, key) =>
+    h('span', {
+      key,
+      style: {
+        display: 'inline-block',
+        padding: '5px 12px',
+        borderRadius: 'var(--radius-pill)',
+        backgroundColor: 'var(--color-bg-subtle)',
+        fontSize: '13px',
+        fontWeight: 500,
+        color: 'var(--color-text-secondary)',
+        whiteSpace: 'nowrap',
+        lineHeight: 1.4,
+      }
+    }, text);
+
+  // 产品展示区域（Monthly / Weekly 共用）
+  const renderProductSection = (menu, type) => {
     const isMonthly = type === 'monthly';
     const ids = isMonthly ? (menu.monthlyFavorites || []) : (menu.weeklySelection || []);
-    const label = isMonthly ? '⭐ Monthly Favorite' : '📅 Weekly Selection';
+    const accentColor = isMonthly ? '#E8C547' : '#5B9E8E';
     const icon = isMonthly ? '⭐' : '📅';
-    const productNames = getProductNames(ids);
+    const label = isMonthly ? 'Monthly Favorite' : 'Weekly Selection';
+
+    const displayIds = ids.slice(0, 3);
+    const remaining = ids.length - displayIds.length;
 
     return h('div', {
-      key: type,
-      onClick: () => {
+      onClick: (e) => {
+        e.stopPropagation();
         Haptics.light();
         navigate(`/puff/menus/select?type=${type}&menuId=${menu.id}`);
       },
       style: {
         display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--space-md)',
-        padding: 'var(--space-md)',
-        backgroundColor: 'var(--color-bg-subtle)',
-        borderRadius: 'var(--radius-md)',
+        gap: '10px',
         cursor: 'pointer',
-        marginBottom: 'var(--space-xs)',
       }
     },
-      h('div', { style: { fontSize: '24px', flexShrink: 0 } }, icon),
-      h('div', { style: { flex: 1, minWidth: 0 } },
-        h('div', {
-          style: { fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)' }
-        }, label),
-        h('div', {
-          style: {
-            fontSize: '13px',
-            color: 'var(--color-text-tertiary)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }
-        }, ids.length > 0
-          ? `已选择 ${ids.length} 个产品 · ${productNames || ''}`
-          : '未选择产品'
-        )
-      ),
+      // 左侧 Accent Bar
       h('div', {
         style: {
-          fontSize: '20px',
-          color: 'var(--color-text-tertiary)',
+          width: '3px',
+          borderRadius: '2px',
+          backgroundColor: accentColor,
           flexShrink: 0,
         }
-      }, '›')
+      }),
+      // 右侧内容
+      h('div', { style: { flex: 1, minWidth: 0 } },
+        // 标题
+        h('div', {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            marginBottom: '6px',
+          }
+        },
+          h('span', { style: { fontSize: '13px' } }, icon),
+          h('span', {
+            style: { fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)' }
+          }, label)
+        ),
+        // 产品 Chips
+        ids.length === 0
+          ? h('span', {
+              style: { fontSize: '13px', color: 'var(--color-text-tertiary)' }
+            }, '未选择产品')
+          : h('div', {
+              style: {
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '6px',
+                alignItems: 'center',
+              }
+            },
+              displayIds.map((id, i) => renderChip(getProductName(id), i)),
+              remaining > 0 && h('span', {
+                style: {
+                  fontSize: '13px',
+                  color: 'var(--color-text-tertiary)',
+                  fontWeight: 500,
+                  padding: '0 4px',
+                }
+              }, `+${remaining} more`)
+            )
+      )
     );
   };
 
-  const renderMenu = (menu) =>
-    h('div', {
+  const renderMenu = (menu) => {
+    const { main, sub } = formatDateEn(menu.date);
+    const isMenuOpen = openMenuId === menu.id;
+
+    return h('div', {
       key: menu.id,
       style: {
         backgroundColor: 'var(--color-bg-card)',
         borderRadius: 'var(--radius-md)',
         boxShadow: 'var(--shadow-1)',
-        padding: 'var(--space-md)',
-        marginBottom: 'var(--space-sm)',
+        padding: '18px 20px',
+        marginBottom: '16px',
       }
     },
-      // 日期 + 操作按钮
+      // 日期 + 操作菜单
       h('div', {
         style: {
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 'var(--space-sm)',
+          alignItems: 'flex-start',
+          marginBottom: '14px',
         }
       },
-        h('div', {
-          onClick: () => openForm(menu),
-          style: { flex: 1, fontSize: '16px', fontWeight: 600, color: 'var(--color-text-primary)' }
-        }, DateUtils.friendlyDate(menu.date)),
-        h('div', { style: { display: 'flex', gap: 'var(--space-xs)' } },
-          viewMode === 'active'
-            ? h('button', {
-                onClick: (e) => { e.stopPropagation(); handleArchive(menu.id); },
-                style: { padding: '4px 10px', borderRadius: 'var(--radius-pill)', fontSize: '12px', backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-tertiary)' }
-              }, '归档')
-            : h('button', {
-                onClick: (e) => { e.stopPropagation(); handleUnarchive(menu.id); },
-                style: { padding: '4px 10px', borderRadius: 'var(--radius-pill)', fontSize: '12px', backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-complete)' }
-              }, '恢复'),
+        h('div', null,
+          h('div', {
+            style: { fontSize: '17px', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.3px' }
+          }, main),
+          h('div', {
+            style: { fontSize: '13px', color: 'var(--color-text-tertiary)', marginTop: '2px' }
+          }, sub)
+        ),
+        // "..." 菜单按钮
+        h('div', { style: { position: 'relative' } },
           h('button', {
-            onClick: (e) => { e.stopPropagation(); handleDelete(menu.id); },
-            style: { padding: '4px 10px', borderRadius: 'var(--radius-pill)', fontSize: '12px', backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-tertiary)' }
-          }, '删除'),
+            onClick: (e) => {
+              e.stopPropagation();
+              Haptics.light();
+              setOpenMenuId(isMenuOpen ? null : menu.id);
+            },
+            style: {
+              width: '30px', height: '30px', borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: 'transparent',
+              fontSize: '20px', color: 'var(--color-text-tertiary)',
+              lineHeight: 1,
+            }
+          }, '···'),
+          // 下拉菜单
+          isMenuOpen && h('div', {
+            style: {
+              position: 'absolute',
+              top: '34px',
+              right: 0,
+              backgroundColor: 'var(--color-bg-card)',
+              borderRadius: 'var(--radius-sm)',
+              boxShadow: 'var(--shadow-3)',
+              zIndex: 50,
+              minWidth: '130px',
+              overflow: 'hidden',
+            }
+          },
+            h('div', {
+              onClick: (e) => { e.stopPropagation(); openForm(menu); },
+              style: {
+                padding: '10px 16px', fontSize: '14px', color: 'var(--color-text-primary)',
+                cursor: 'pointer', borderBottom: '1px solid var(--color-border-light)',
+              }
+            }, 'Edit'),
+            h('div', {
+              onClick: (e) => {
+                e.stopPropagation();
+                viewMode === 'active' ? handleArchive(menu) : handleUnarchive(menu);
+              },
+              style: {
+                padding: '10px 16px', fontSize: '14px', color: 'var(--color-text-primary)',
+                cursor: 'pointer', borderBottom: '1px solid var(--color-border-light)',
+              }
+            }, viewMode === 'active' ? 'Archive' : 'Unarchive'),
+            h('div', {
+              onClick: (e) => { e.stopPropagation(); handleDelete(menu); },
+              style: {
+                padding: '10px 16px', fontSize: '14px', color: 'var(--color-deadline)',
+                cursor: 'pointer',
+              }
+            }, 'Delete'),
+          )
         )
       ),
 
-      // Monthly Favorite 摘要
-      renderSummaryCard(menu, 'monthly'),
+      // Monthly Favorite
+      renderProductSection(menu, 'monthly'),
 
-      // Weekly Selection 摘要
-      renderSummaryCard(menu, 'weekly'),
+      // Divider
+      h('div', {
+        style: {
+          height: '1px',
+          backgroundColor: 'var(--color-border-light)',
+          margin: '14px 0',
+        }
+      }),
+
+      // Weekly Selection
+      renderProductSection(menu, 'weekly'),
 
       // 备注
       menu.notes && h('div', {
         style: {
           fontSize: '13px',
           color: 'var(--color-text-tertiary)',
-          marginTop: 'var(--space-sm)',
-          padding: '0 var(--space-xs)',
+          marginTop: '14px',
+          paddingTop: '12px',
+          borderTop: '1px solid var(--color-border-light)',
         }
       }, menu.notes),
     );
+  };
 
-  return h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
+  return h('div', {
+    style: { display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }
+  },
 
     h(NavBar, {
       title: '菜单', showBack: true,
@@ -238,7 +350,7 @@ function MenuPage() {
           backgroundColor: viewMode === 'active' ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
           color: viewMode === 'active' ? '#FFFFFF' : 'var(--color-text-secondary)',
         }
-      }, '活跃'),
+      }, 'Active'),
       h('button', {
         onClick: () => { Haptics.selection(); setViewMode('archived'); },
         style: {
@@ -247,10 +359,13 @@ function MenuPage() {
           backgroundColor: viewMode === 'archived' ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
           color: viewMode === 'archived' ? '#FFFFFF' : 'var(--color-text-secondary)',
         }
-      }, '已归档')
+      }, 'Archived')
     ),
 
-    h('div', { className: 'scroll-container page' },
+    h('div', {
+      className: 'scroll-container page',
+      onClick: () => { if (openMenuId) setOpenMenuId(null); },
+    },
       menus.length === 0
         ? h(EmptyState, { icon: '📅', title: viewMode === 'archived' ? '没有已归档的菜单' : '还没有菜单', subtitle: '点击右上角 + 创建菜单' })
         : h('div', null, menus.map(renderMenu))
@@ -277,7 +392,7 @@ function MenuPage() {
             fontSize: '13px', color: 'var(--color-text-tertiary)',
             textAlign: 'center', lineHeight: 1.5,
           }
-        }, '创建后点击 Monthly Favorite 或 Weekly Selection 卡片选择产品'),
+        }, '创建后点击 Monthly Favorite 或 Weekly Selection 选择产品'),
       )
     )
   );
