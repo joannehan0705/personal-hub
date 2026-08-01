@@ -276,7 +276,7 @@ function DataManagement() {
     h(ConfirmDialog, {
       open: confirmClear,
       title: '确认清空所有数据？',
-      message: '此操作将删除所有待办、购物、记账、Alex、宠物和订单数据。系统会自动创建备份，你可以随时通过「恢复数据」找回。',
+      message: '此操作将删除所有数据（待办、购物、记账、Alex、零用钱、储蓄目标、宠物、订单、食谱、取货点、笔记等）。系统会自动创建备份，你可以随时通过「恢复数据」找回。',
       confirmText: '清空',
       danger: true,
       onConfirm: handleClear,

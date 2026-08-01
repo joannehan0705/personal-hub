@@ -5,20 +5,28 @@
 
 const BackupUtils = {
   /**
+   * 获取数据库中所有 store 名称（动态读取，不硬编码）
+   */
+  getAllStoreNames() {
+    const db = window.db;
+    if (!db) return [];
+    return Array.from(db.objectStoreNames).filter(s => s !== 'meta');
+  },
+
+  /**
    * 导出全部数据为 JSON 对象
    */
   async exportAll() {
-    const stores = [
-      'todos', 'shopping', 'transactions', 'budgets',
-      'alex', 'pets', 'orders', 'products', 'customers',
-      'recipes', 'inventory', 'puffTodos', 'socialPosts', 'meta',
-      'notes', 'menus', 'wishlist'
-    ];
+    const stores = this.getAllStoreNames();
 
     const data = {};
     for (const store of stores) {
       data[store] = await window.db.getAll(store);
     }
+
+    // meta 单独处理：导出有用的 meta 数据（排除备份本身）
+    const metaAll = await window.db.getAll('meta');
+    data['meta'] = metaAll.filter(m => m.key !== 'lastBackupBeforeImport');
 
     return {
       version: '1.0',
@@ -58,9 +66,9 @@ const BackupUtils = {
       throw new Error('无效的备份文件：缺少数据内容');
     }
 
-    const requiredStores = ['todos', 'shopping', 'transactions', 'alex', 'pets', 'orders'];
-    for (const store of requiredStores) {
-      if (data.data[store] && !Array.isArray(data.data[store])) {
+    // 校验所有 store 数据都是数组
+    for (const store of Object.keys(data.data)) {
+      if (data.data[store] !== null && !Array.isArray(data.data[store])) {
         throw new Error(`无效的备份文件：${store} 数据格式错误`);
       }
     }
@@ -142,12 +150,7 @@ const BackupUtils = {
     // 自动备份
     await this.backupBeforeImport();
 
-    const stores = [
-      'todos', 'shopping', 'transactions', 'budgets',
-      'alex', 'pets', 'orders', 'products', 'customers',
-      'recipes', 'inventory', 'puffTodos', 'socialPosts',
-      'notes', 'menus', 'wishlist'
-    ];
+    const stores = this.getAllStoreNames();
 
     for (const store of stores) {
       await window.db.clear(store);
