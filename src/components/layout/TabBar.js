@@ -8,8 +8,8 @@ const { createElement: h } = React;
 
 const TABS = [
   { key: 'home',    path: '/',         icon: 'home',     label: '首页' },
-  { key: 'puff',    path: '/puff',     icon: 'puff',     label: '泡芙' },
   { key: 'alex',    path: '/alex',     icon: 'alex',     label: 'Alex' },
+  { key: 'puff',    path: '/puff',     icon: 'puff',     label: '泡芙' },
   { key: 'finance', path: '/finance',  icon: 'finance',  label: '记账' },
 ];
 
