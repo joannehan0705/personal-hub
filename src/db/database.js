@@ -189,6 +189,25 @@ window.dbReady.then(database => {
       database.put('meta', { key: 'schemaVersion', value: DB_VERSION });
     }
   });
+  // 一次性迁移：旧订单状态 new→pending, confirmed→making
+  database.get('meta', 'orderStatusMigrated').then(val => {
+    if (!val) {
+      database.getAll('orders').then(orders => {
+        let needUpdate = false;
+        const updates = orders.map(o => {
+          let newStatus = o.status;
+          if (o.status === 'new') { newStatus = 'pending'; needUpdate = true; }
+          else if (o.status === 'confirmed') { newStatus = 'making'; needUpdate = true; }
+          return needUpdate ? { ...o, status: newStatus } : null;
+        }).filter(Boolean);
+        if (needUpdate) {
+          const tx = database.transaction('orders', 'readwrite');
+          Promise.all(updates.map(o => tx.store.put(o))).then(() => tx.done);
+        }
+        database.put('meta', { key: 'orderStatusMigrated', value: true });
+      });
+    }
+  });
 }).catch(err => {
   console.error('IndexedDB 初始化失败:', err);
 });

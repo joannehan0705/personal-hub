@@ -3,7 +3,7 @@
  * 缓存策略：index.html 网络优先，其他资源 Cache First + 后台更新
  */
 
-const CACHE_NAME = 'personal-hub-v30';
+const CACHE_NAME = 'personal-hub-v31';
 
 // 需要缓存的资源
 const ASSETS_TO_CACHE = [

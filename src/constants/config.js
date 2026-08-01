@@ -6,7 +6,7 @@
 const APP_CONFIG = {
   // 应用信息
   name: 'Personal Hub',
-  version: '2.18.1',
+  version: '2.19.0',
 
   // 数据库
   dbName: 'personal-hub-db',
@@ -35,18 +35,16 @@ const APP_CONFIG = {
 
   // 订单状态
   orderStatus: {
-    new:       { label: '新建',   color: '#6B9EC4', icon: '○' },
-    confirmed: { label: '已确认', color: '#E8C547', icon: '◐' },
-    making:    { label: '制作中', color: '#8B7EC8', icon: '◑' },
-    ready:     { label: '待取货', color: '#E8826B', icon: '●' },
-    completed: { label: '已完成', color: '#7BAE8E', icon: '✓' },
-    cancelled: { label: '已取消', color: '#9C968B', icon: '✕' },
+    pending:   { label: '待处理',   color: '#6B9EC4', icon: '○' },
+    making:    { label: '制作中',   color: '#8B7EC8', icon: '◑' },
+    ready:     { label: '待取货',   color: '#E8826B', icon: '●' },
+    completed: { label: '已完成',   color: '#7BAE8E', icon: '✓' },
+    cancelled: { label: '已取消',   color: '#9C968B', icon: '✕' },
   },
 
   // 订单状态流转
   orderFlow: {
-    new:       ['confirmed', 'cancelled'],
-    confirmed: ['making', 'cancelled'],
+    pending:   ['making', 'cancelled'],
     making:    ['ready', 'cancelled'],
     ready:     ['completed', 'cancelled'],
     completed: [],

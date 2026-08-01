@@ -13,7 +13,7 @@ function OrderForm() {
   const [items, setItems] = useState([]);
   const [pickupDate, setPickupDate] = useState(DateUtils.today());
   const [pickupTime, setPickupTime] = useState('');
-  const [status, setStatus] = useState('new');
+  const [status, setStatus] = useState('pending');
   const [notes, setNotes] = useState('');
   const [products, setProducts] = useState([]);
   const [pickupPointId, setPickupPointId] = useState('');
@@ -57,7 +57,7 @@ function OrderForm() {
       // 新建：重置
       setOrder(null);
       setCustomer(''); setItems([]); setPickupDate(DateUtils.today());
-      setPickupTime(''); setStatus('new'); setNotes(''); setPickupPointId('');
+      setPickupTime(''); setStatus('pending'); setNotes(''); setPickupPointId('');
     }
 
     // 默认所有分类收起
@@ -465,8 +465,8 @@ function OrderForm() {
           )
         ),
 
-        // 状态
-        h('div', null,
+        // 状态（仅编辑时显示，新建默认待处理）
+        order && h('div', null,
           h('label', {
             style: { fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', paddingLeft: 'var(--space-xs)', display: 'block', marginBottom: 'var(--space-xs)' }
           }, '状态'),
