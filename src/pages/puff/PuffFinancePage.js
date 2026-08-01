@@ -9,6 +9,8 @@ function PuffFinancePage() {
   const { dataVersion, refreshData, financeMonth, dispatch, ACTIONS, navigate, showToast } = useApp();
   const [transactions, setTransactions] = useState([]);
   const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 });
+  const [allTimeMode, setAllTimeMode] = useState(false);
+  const [allTimeSummary, setAllTimeSummary] = useState({ income: 0, expense: 0, balance: 0 });
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState('expense');
   const [editingTx, setEditingTx] = useState(null);
@@ -20,12 +22,21 @@ function PuffFinancePage() {
   }, [dataVersion, financeMonth]);
 
   const loadData = async () => {
-    const [puffTx, sum] = await Promise.all([
+    const [puffTx, sum, allPuffTx] = await Promise.all([
       DAO.transactions.getByMonth(financeMonth, 'puff'),
       DAO.transactions.getMonthlySummary(financeMonth, 'puff'),
+      DAO.transactions.getAll('puff'),
     ]);
     setTransactions(puffTx);
     setSummary(sum);
+
+    // 累计统计
+    let allIncome = 0, allExpense = 0;
+    for (const t of allPuffTx) {
+      if (t.type === 'income') allIncome += t.amount || 0;
+      else allExpense += t.amount || 0;
+    }
+    setAllTimeSummary({ income: allIncome, expense: allExpense, balance: allIncome - allExpense });
   };
 
   const handlePrevMonth = () => {
@@ -149,8 +160,8 @@ function PuffFinancePage() {
     }),
 
     h('div', { className: 'scroll-container page-with-action-bar' },
-      // 月份选择
-      h('div', {
+      // 月份选择（累计模式下隐藏）
+      !allTimeMode && h('div', {
         style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-lg)', padding: 'var(--space-sm) 0 var(--space-md)' }
       },
         h('button', { onClick: handlePrevMonth, style: { width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
@@ -160,22 +171,66 @@ function PuffFinancePage() {
           h(Icon, { name: 'chevronRight', size: 22, color: 'var(--color-text-secondary)' }))
       ),
 
-      // 统计概览
+      // 统计概览 + All Time 开关
       h(Card, { style: { marginBottom: 'var(--space-md)' } },
+        h('div', {
+          style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' },
+        },
+          h('span', {
+            style: { fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)' },
+          }, allTimeMode ? '累计总览' : '本月概览'),
+          // All Time 开关
+          h('div', {
+            onClick: () => { Haptics.selection(); setAllTimeMode(!allTimeMode); },
+            style: {
+              display: 'flex', alignItems: 'center', gap: '6px',
+              cursor: 'pointer',
+            },
+          },
+            h('span', {
+              style: { fontSize: '11px', color: allTimeMode ? 'var(--color-text-tertiary)' : 'var(--color-text-tertiary)' },
+            }, 'All Time'),
+            h('div', {
+              style: {
+                width: '36px', height: '20px', borderRadius: '10px',
+                backgroundColor: allTimeMode ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
+                position: 'relative', transition: 'background-color 0.2s',
+                flexShrink: 0,
+              },
+            },
+              h('div', {
+                style: {
+                  position: 'absolute',
+                  top: '2px', left: allTimeMode ? '18px' : '2px',
+                  width: '16px', height: '16px', borderRadius: '50%',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                  transition: 'left 0.2s',
+                },
+              }),
+            ),
+          ),
+        ),
         h('div', { style: { display: 'flex', justifyContent: 'space-around', textAlign: 'center' } },
           h('div', null,
-            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '收入'),
-            h('div', { style: { fontSize: '22px', fontWeight: 600, color: 'var(--color-complete)' }, className: 'numeric' }, FormatUtils.money(summary.income))
+            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, allTimeMode ? '累计收入' : '收入'),
+            h('div', { style: { fontSize: '22px', fontWeight: 600, color: 'var(--color-complete)' }, className: 'numeric' },
+              FormatUtils.money(allTimeMode ? allTimeSummary.income : summary.income))
           ),
           h('div', null,
-            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '支出'),
-            h('div', { style: { fontSize: '22px', fontWeight: 600, color: 'var(--color-deadline)' }, className: 'numeric' }, FormatUtils.money(summary.expense))
+            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, allTimeMode ? '累计支出' : '支出'),
+            h('div', { style: { fontSize: '22px', fontWeight: 600, color: 'var(--color-deadline)' }, className: 'numeric' },
+              FormatUtils.money(allTimeMode ? allTimeSummary.expense : summary.expense))
           ),
           h('div', null,
-            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '利润'),
-            h('div', { style: { fontSize: '22px', fontWeight: 600, color: summary.balance >= 0 ? 'var(--color-accent)' : 'var(--color-deadline)' }, className: 'numeric' },
-              FormatUtils.money(summary.balance)
-            )
+            h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, allTimeMode ? '累计利润' : '利润'),
+            h('div', {
+              style: {
+                fontSize: '22px', fontWeight: 600,
+                color: (allTimeMode ? allTimeSummary.balance : summary.balance) >= 0 ? 'var(--color-accent)' : 'var(--color-deadline)',
+              },
+              className: 'numeric',
+            }, FormatUtils.money(allTimeMode ? allTimeSummary.balance : summary.balance))
           ),
         )
       ),
