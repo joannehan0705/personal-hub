@@ -92,7 +92,7 @@ function AlexCard() {
   const [records, setRecords] = useState([]);
 
   useEffect(() => {
-    DAO.alex.getToday().then(setRecords);
+    DAO.alex.getUpcoming(7).then(setRecords);
   }, [dataVersion]);
 
   return h('div', {
@@ -102,16 +102,18 @@ function AlexCard() {
     onTouchEnd: (e) => { e.currentTarget.style.transform = 'scale(1)'; },
   },
     h('div', { style: TILE_HEADER_STYLE },
-      h('span', { style: TILE_TITLE_STYLE }, '👦 Alex Today'),
+      h('span', { style: TILE_TITLE_STYLE }, '👦 Alex 提醒'),
       h('span', { style: TILE_COUNT_STYLE },
         records.length ? `${records.length}项` : ''
       )
     ),
     records.length === 0
-      ? h('div', { style: TILE_EMPTY_STYLE }, '今天没有安排')
+      ? h('div', { style: TILE_EMPTY_STYLE }, '近期没有安排')
       : h('div', { style: TILE_LIST_STYLE },
           records.slice(0, 3).map(r => {
             const cat = APP_CONFIG.alexCategories.find(c => c.key === r.category);
+            const today = DateUtils.today();
+            const isToday = r.date === today;
             return h('div', {
               key: r.id,
               style: {
@@ -133,14 +135,15 @@ function AlexCard() {
                   color: 'var(--color-text-secondary)',
                 }
               }, r.title),
-              r.time && h('span', {
+              h('span', {
                 style: {
                   fontSize: '12px',
                   color: 'var(--color-text-tertiary)',
                   flexShrink: 0,
-                },
-                className: 'numeric'
-              }, FormatUtils.time(r.time))
+                }
+              },
+                (isToday ? (r.time ? FormatUtils.time(r.time) : '今天') : DateUtils.friendlyDate(r.date))
+              )
             );
           })
         ),

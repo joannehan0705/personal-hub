@@ -14,33 +14,17 @@ function UpcomingCard() {
     const today = DateUtils.today();
     const endDate = DateUtils.addDays(today, 14);
 
-    // 1. 未来 todos
+    // 只显示待办里即将到来的 tasks
     const weekTodos = await DAO.todos.getByStatus('week');
     const laterTodos = await DAO.todos.getByStatus('later');
-    const futureTodos = [...weekTodos, ...laterTodos]
+    const all = [...weekTodos, ...laterTodos]
       .filter(t => t.date && t.date > today && t.date <= endDate)
       .map(t => ({
         date: t.date,
         time: t.time,
         label: t.title,
         icon: '📋',
-      }));
-
-    // 2. 宠物提醒
-    const petReminders = await DAO.pets.getUpcomingReminders(14);
-    const futurePets = petReminders
-      .filter(r => (r._reminderDate || r.nextDate || r.date) > today)
-      .map(r => {
-        const pet = APP_CONFIG.pets.find(p => p.key === r.petName);
-        return {
-          date: r._reminderDate || r.nextDate || r.date,
-          time: r.time,
-          label: r.title,
-          icon: pet?.icon || '🐾',
-        };
-      });
-
-    const all = [...futureTodos, ...futurePets]
+      }))
       .sort((a, b) => {
         const dc = a.date.localeCompare(b.date);
         if (dc !== 0) return dc;

@@ -409,6 +409,36 @@ class AlexDAO extends BaseDAO {
     });
   }
 
+  async getUpcoming(days = 7) {
+    const today = DateUtils.today();
+    const endDate = DateUtils.addDays(today, days);
+    const todayRecords = await this.getToday();
+
+    // 未来非 recurring 的事项
+    const all = await this.getAll();
+    const futureRecords = all.filter(r => {
+      if (r.recurring && r.recurring !== 'none') return false;
+      return r.date && r.date > today && r.date <= endDate;
+    });
+
+    // 合并去重 + 排序
+    const seen = new Set();
+    const merged = [...todayRecords, ...futureRecords]
+      .filter(r => {
+        if (seen.has(r.id)) return false;
+        seen.add(r.id);
+        return true;
+      })
+      .sort((a, b) => {
+        const da = a.date || '';
+        const db = b.date || '';
+        if (da !== db) return da.localeCompare(db);
+        return (a.time || '').localeCompare(b.time || '');
+      });
+
+    return merged;
+  }
+
   async search(keyword) {
     const all = await this.getAll();
     const lower = keyword.toLowerCase();
