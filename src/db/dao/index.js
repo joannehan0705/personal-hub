@@ -403,6 +403,17 @@ class AlexDAO extends BaseDAO {
   async getUpcoming(days = 7) {
     const today = DateUtils.today();
     const all = await this.getAll();
+    console.log('[AlexDAO] getUpcoming: today=%s, all records=%d', today, all.length);
+    all.forEach(r => {
+      if (r.recurring && r.recurring !== 'none') {
+        console.log('[AlexDAO] recurring record:', {
+          id: r.id, title: r.title, category: r.category,
+          recurring: r.recurring, weekday: r.weekday,
+          date: r.date, recurringStartDate: r.recurringStartDate,
+          recurringEndDate: r.recurringEndDate
+        });
+      }
+    });
     const results = [];
     const seen = new Set();
 
@@ -419,6 +430,9 @@ class AlexDAO extends BaseDAO {
         }
       }
     }
+
+    console.log('[AlexDAO] getUpcoming results: %d matches', results.length);
+    results.forEach(r => console.log('[AlexDAO]  -', r._matchDate, r.title, r.recurring));
 
     // 按匹配日期 + 时间排序
     results.sort((a, b) => {

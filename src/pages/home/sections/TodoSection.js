@@ -92,7 +92,10 @@ function AlexCard() {
   const [records, setRecords] = useState([]);
 
   useEffect(() => {
-    DAO.alex.getUpcoming(7).then(setRecords);
+    DAO.alex.getUpcoming(7).then(records => {
+      console.log('[AlexCard] getUpcoming(7) results:', records);
+      setRecords(records);
+    });
   }, [dataVersion]);
 
   return h('div', {
