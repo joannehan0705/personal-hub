@@ -36,6 +36,7 @@ function StudioForm({ open, onClose, note }) {
 
   useEffect(() => {
     if (open) {
+      setFullscreenEdit(false);
       if (note) {
         setTitle(note.title || '');
         setContent(note.content || '');
