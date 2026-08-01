@@ -11,7 +11,7 @@ const { createElement: h, useState, useEffect } = React;
 const TILE_STYLE = {
   backgroundColor: 'var(--color-bg-card)',
   borderRadius: 'var(--radius-lg)',
-  padding: 'var(--space-lg)',
+  padding: 'var(--space-lg) var(--space-xl)',
   boxShadow: 'var(--shadow-1)',
   cursor: 'pointer',
   transition: 'transform 0.1s, background-color 0.15s',

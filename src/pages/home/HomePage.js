@@ -27,11 +27,9 @@ function HomePage() {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
     gap: 'var(--space-md)',
-    padding: '0 var(--space-lg)',
   };
 
   const fullWidthStyle = {
-    padding: '0 var(--space-lg)',
     marginBottom: 'var(--space-md)',
   };
 
@@ -72,7 +70,6 @@ function HomePage() {
       // 第四行: Today's Production (全宽，仅有订单时显示)
       hasTodayOrders && h('div', {
         style: {
-          padding: '0 var(--space-lg)',
           marginTop: 'var(--space-md)',
         }
       }, h(ProductionCard)),
