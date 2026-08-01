@@ -219,7 +219,7 @@ function ProductSelectPage() {
     h('div', {
       className: 'scroll-container page',
       style: {
-        paddingBottom: '80px',
+        paddingBottom: '120px',
       }
     },
       filtered.length === 0
