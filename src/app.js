@@ -108,8 +108,8 @@ function App() {
     // 页面内容
     h(PageComponent),
 
-    // TabBar — 始终显示在所有页面底部（fixed 定位）
-    h(TabBar),
+    // TabBar — 根据路由配置决定是否显示
+    matched.tab !== null && h(TabBar),
 
     // 快速新增面板
     h(QuickAdd),

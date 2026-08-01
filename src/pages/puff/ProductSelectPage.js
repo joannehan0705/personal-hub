@@ -240,17 +240,14 @@ function ProductSelectPage() {
     h('div', {
       style: {
         position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 'var(--space-md) var(--space-lg)',
+        bottom: 0, left: 0, right: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '12px var(--space-lg)',
+        paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
         backgroundColor: 'var(--color-bg-card)',
         borderTop: '1px solid var(--color-border-light)',
-        paddingBottom: 'calc(var(--space-md) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)))',
-        zIndex: 100,
+        zIndex: 1000,
+        boxShadow: '0 -2px 10px rgba(0,0,0,0.05)',
       }
     },
       h('span', {

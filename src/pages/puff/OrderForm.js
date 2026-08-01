@@ -60,11 +60,9 @@ function OrderForm() {
       setPickupTime(''); setStatus('new'); setNotes(''); setPickupPointId('');
     }
 
-    // 默认折叠非 Classic 分类
+    // 默认所有分类收起
     const cats = {};
-    CATEGORIES.product.forEach(c => {
-      if (c.key !== 'classic') cats[c.key] = true;
-    });
+    CATEGORIES.product.forEach(c => { cats[c.key] = true; });
     setCollapsedCats(cats);
   };
 
@@ -373,7 +371,7 @@ function OrderForm() {
 
     h('div', {
       className: 'scroll-container page',
-      style: { paddingBottom: '90px' }
+      style: { paddingBottom: '120px' }
     },
       // 搜索框
       h('div', {
@@ -500,11 +498,12 @@ function OrderForm() {
         position: 'fixed',
         bottom: 0, left: 0, right: 0,
         display: 'flex', alignItems: 'center', gap: 'var(--space-md)',
-        padding: 'var(--space-md) var(--space-lg)',
+        padding: '12px var(--space-lg)',
+        paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
         backgroundColor: 'var(--color-bg-card)',
         borderTop: '1px solid var(--color-border-light)',
-        paddingBottom: 'calc(var(--space-md) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)))',
-        zIndex: 100,
+        zIndex: 1000,
+        boxShadow: '0 -2px 10px rgba(0,0,0,0.05)',
       }
     },
       // 左侧：已选摘要（点击展开详情）
