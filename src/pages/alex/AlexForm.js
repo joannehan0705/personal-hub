@@ -287,7 +287,7 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
         recurring !== 'none' && h('div', null,
           h('div', {
             style: { fontSize: '12px', color: 'var(--color-text-tertiary)', marginBottom: '4px' }
-          }, '重复截止日期（可选，留空则持续到年底）'),
+          }, '重复截止日期（可选，留空则无截止日期，持续到取消为止）'),
           h('input', {
             type: 'date',
             value: recurringEndDate,
