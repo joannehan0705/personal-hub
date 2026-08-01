@@ -19,6 +19,7 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
   const [opponent, setOpponent] = useState('');
   const [score, setScore] = useState('');
   const [duration, setDuration] = useState('');
+  const [hockeyLocation, setHockeyLocation] = useState('');
 
   // 课外班特有字段
   const [className, setClassName] = useState('');
@@ -57,6 +58,7 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
         setOpponent(record.opponent || '');
         setScore(record.score || '');
         setDuration(record.duration || '');
+        setHockeyLocation(record.hockeyLocation || '');
         setClassName(record.className || '');
         setTeacher(record.teacher || '');
         setLocation(record.location || '');
@@ -79,7 +81,7 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
         setDate(DateUtils.today());
         setTime('');
         setNotes('');
-        setOpponent(''); setScore(''); setDuration('');
+        setOpponent(''); setScore(''); setDuration(''); setHockeyLocation('');
         setClassName(''); setTeacher(''); setLocation('');
         setActivityType(''); setActivityLocation('');
         setRecurring('none'); setWeekday(1); setRecurringStartDate(DateUtils.today()); setRecurringEndDate('');
@@ -109,6 +111,7 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
         opponent: opponent.trim(),
         score: score.trim(),
         duration: duration.trim(),
+        hockeyLocation: hockeyLocation.trim(),
       } : {}),
       // 课外班特有
       ...(category === 'class' ? {
@@ -198,6 +201,7 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
         h(Input, { label: '对手', value: opponent, onChange: setOpponent, placeholder: '如：Falcons' }),
         h(Input, { label: '比分', value: score, onChange: setScore, placeholder: '如：3:2', style: inputGap }),
         h(Input, { label: '时长', value: duration, onChange: setDuration, placeholder: '如：1.5h', style: inputGap }),
+        h(Input, { label: '地点', value: hockeyLocation, onChange: setHockeyLocation, placeholder: '如：Ice Arena', style: inputGap }),
       ),
 
       // ===== 课外班特有字段 =====
