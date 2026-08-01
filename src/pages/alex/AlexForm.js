@@ -32,6 +32,7 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
   // Recurring（Hockey 和课外班共有）
   const [recurring, setRecurring] = useState('none');
   const [weekday, setWeekday] = useState(1); // 默认周一
+  const [recurringStartDate, setRecurringStartDate] = useState(DateUtils.today());
   const [recurringEndDate, setRecurringEndDate] = useState('');
 
   // Medical 特有字段
@@ -63,6 +64,7 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
         setActivityLocation(record.activityLocation || '');
         setRecurring(record.recurring || 'none');
         setWeekday(record.weekday != null ? record.weekday : (record.date ? new Date(record.date + 'T00:00:00').getDay() : 1));
+        setRecurringStartDate(record.recurringStartDate || record.date || DateUtils.today());
         setRecurringEndDate(record.recurringEndDate || '');
         setDiagnosis(record.diagnosis || '');
         setMedication(record.medication || '');
@@ -80,7 +82,7 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
         setOpponent(''); setScore(''); setDuration('');
         setClassName(''); setTeacher(''); setLocation('');
         setActivityType(''); setActivityLocation('');
-        setRecurring('none'); setWeekday(1); setRecurringEndDate('');
+        setRecurring('none'); setWeekday(1); setRecurringStartDate(DateUtils.today()); setRecurringEndDate('');
         setDiagnosis(''); setMedication(''); setFollowUpDate('');
         setBookTitle(''); setBookAuthor(''); setReadingStatus('reading'); setRating(0);
       }
@@ -123,6 +125,7 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
       ...(supportsRecurring ? {
         recurring,
         weekday: (recurring === 'weekly' || recurring === 'biweekly') ? weekday : null,
+        recurringStartDate: recurring !== 'none' ? (recurringStartDate || date) : null,
         recurringEndDate: recurringEndDate || null,
       } : {}),
       // Medical 特有
@@ -240,6 +243,15 @@ function AlexForm({ open, onClose, record, category: initialCategory }) {
             }, freq.label)
           )
         ),
+        // 开始日期（recurring 模式下显示）
+        recurring !== 'none' && h(Input, {
+          label: '开始日期（从这天起开始循环）',
+          value: recurringStartDate,
+          onChange: setRecurringStartDate,
+          type: 'date',
+          required: true,
+        }),
+
         // 星期选择器（仅 weekly / biweekly）
         (recurring === 'weekly' || recurring === 'biweekly') && h('div', {
           style: { marginBottom: 'var(--space-md)' }

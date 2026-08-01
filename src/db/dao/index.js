@@ -369,21 +369,41 @@ class AlexDAO extends BaseDAO {
       if (!r.recurring || r.recurring === 'none') {
         return r.date === today;
       }
-      // daily：每天都显示
+
+      // 获取开始日期：优先 recurringStartDate，其次 date
+      const startDateStr = r.recurringStartDate || r.date;
+      if (!startDateStr) return false;
+      const startDate = new Date(startDateStr + 'T00:00:00');
+
+      // 如果今天早于开始日期，不显示
+      if (todayDate < startDate) return false;
+
+      // 检查结束日期
+      if (r.recurringEndDate) {
+        const endDate = new Date(r.recurringEndDate + 'T00:00:00');
+        if (todayDate > endDate) return false;
+      }
+
+      // daily：每天都显示（从开始日期起）
       if (r.recurring === 'daily') return true;
+
       // weekly：weekday 匹配今天
       if (r.recurring === 'weekly') {
         return r.weekday === todayWeekday;
       }
-      // biweekly：weekday 匹配，且本周是间隔周（简单处理：按 date 起始算）
+
+      // biweekly：weekday 匹配，且本周是间隔周
       if (r.recurring === 'biweekly') {
         if (r.weekday !== todayWeekday) return false;
-        // 简化：biweekly 暂时也每周显示（精确双周判断需要起始日期）
-        return true;
+        // 计算从开始日期到今天过了多少周，偶数周才显示
+        const diffDays = Math.floor((todayDate - startDate) / (1000 * 60 * 60 * 24));
+        const diffWeeks = Math.floor(diffDays / 7);
+        return diffWeeks % 2 === 0;
       }
+
       // monthly：日期（几号）匹配今天
       if (r.recurring === 'monthly') {
-        return r.date && todayDate.getDate() === new Date(r.date + 'T00:00:00').getDate();
+        return todayDate.getDate() === startDate.getDate();
       }
       return false;
     });
