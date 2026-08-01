@@ -444,9 +444,14 @@ class PetsDAO extends BaseDAO {
     const endDate = DateUtils.addDays(today, days);
     const all = await this.getAll();
     return all
-      .filter(r => r.nextDate && r.nextDate >= today && r.nextDate <= endDate)
+      .filter(r => {
+        // 检查 nextDate（疫苗/洗澡等）或 date（医疗等）
+        const d = r.nextDate || r.date;
+        return d && d >= today && d <= endDate;
+      })
+      .map(r => ({ ...r, _reminderDate: r.nextDate || r.date }))
       .sort((a, b) => {
-        const dc = (a.nextDate || '').localeCompare(b.nextDate || '');
+        const dc = (a._reminderDate || '').localeCompare(b._reminderDate || '');
         if (dc !== 0) return dc;
         return (a.time || '').localeCompare(b.time || '');
       });

@@ -40,9 +40,7 @@ const FormatUtils = {
   time(timeStr) {
     if (!timeStr) return '';
     const [h, m] = timeStr.split(':').map(Number);
-    if (h < 12) return `上午 ${h}:${String(m).padStart(2, '0')}`;
-    if (h === 12) return `下午 12:${String(m).padStart(2, '0')}`;
-    return `下午 ${h - 12}:${String(m).padStart(2, '0')}`;
+    return `${h}:${String(m).padStart(2, '0')}`;
   },
 
   /**

@@ -26,38 +26,21 @@ function UpcomingCard() {
         icon: '📋',
       }));
 
-    // 2. Alex 未来事项（非 recurring）
-    const allAlex = await DAO.alex.getAll();
-    const futureAlex = allAlex
-      .filter(r => {
-        if (r.recurring && r.recurring !== 'none') return false;
-        return r.date && r.date > today && r.date <= endDate;
-      })
-      .map(r => {
-        const cat = APP_CONFIG.alexCategories.find(c => c.key === r.category);
-        return {
-          date: r.date,
-          time: r.time,
-          label: r.title,
-          icon: cat?.icon || '👦',
-        };
-      });
-
-    // 3. 宠物提醒
+    // 2. 宠物提醒
     const petReminders = await DAO.pets.getUpcomingReminders(14);
     const futurePets = petReminders
-      .filter(r => r.nextDate > today)
+      .filter(r => (r._reminderDate || r.nextDate || r.date) > today)
       .map(r => {
         const pet = APP_CONFIG.pets.find(p => p.key === r.petName);
         return {
-          date: r.nextDate,
+          date: r._reminderDate || r.nextDate || r.date,
           time: r.time,
           label: r.title,
           icon: pet?.icon || '🐾',
         };
       });
 
-    const all = [...futureTodos, ...futureAlex, ...futurePets]
+    const all = [...futureTodos, ...futurePets]
       .sort((a, b) => {
         const dc = a.date.localeCompare(b.date);
         if (dc !== 0) return dc;

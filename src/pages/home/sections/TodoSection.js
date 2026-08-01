@@ -210,7 +210,7 @@ function PetCard() {
               },
               className: 'numeric'
             },
-              DateUtils.friendlyDate(featured.nextDate) +
+              DateUtils.friendlyDate(featured._reminderDate || featured.nextDate || featured.date) +
               (featured.time ? ' ' + FormatUtils.time(featured.time) : '')
             )
           ),
@@ -238,7 +238,7 @@ function PetCard() {
               }, r.title),
               h('span', {
                 style: { fontSize: '12px', color: 'var(--color-text-tertiary)', flexShrink: 0 }
-              }, DateUtils.friendlyDate(r.nextDate))
+              }, DateUtils.friendlyDate(r._reminderDate || r.nextDate || r.date))
             )
           )
         ),
