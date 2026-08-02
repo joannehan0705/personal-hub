@@ -25,6 +25,32 @@ class TodosDAO extends BaseDAO {
 
     const filtered = all.filter(t => {
       if (t.completed) return false;
+      // recurring 待办：用日期匹配逻辑
+      if (t.recurring && t.recurring !== 'none') {
+        if (status === 'today') return this._matchesOnDate(t, today);
+        if (status === 'week') {
+          // 检查本周内是否有匹配的日期（非今天）
+          for (let d = new Date(weekStart + 'T00:00:00'); d <= new Date(weekEnd + 'T00:00:00'); d.setDate(d.getDate() + 1)) {
+            const ds = DateUtils.toDateStr(d);
+            if (ds !== today && this._matchesOnDate(t, ds)) return true;
+          }
+          return false;
+        }
+        if (status === 'later') {
+          // 检查本周之后是否有匹配日期
+          const afterWeek = new Date(weekEnd + 'T00:00:00');
+          afterWeek.setDate(afterWeek.getDate() + 1);
+          // 检查未来90天内是否有匹配
+          for (let i = 0; i < 90; i++) {
+            const d = new Date(afterWeek);
+            d.setDate(d.getDate() + i);
+            if (this._matchesOnDate(t, DateUtils.toDateStr(d))) return true;
+          }
+          return false;
+        }
+        return false;
+      }
+      // 普通待办
       if (status === 'today') return t.date === today || t.status === 'today';
       if (status === 'week') return t.date && t.date >= weekStart && t.date <= weekEnd && t.date !== today;
       if (status === 'later') return t.date && t.date > weekEnd && t.status !== 'someday';
@@ -55,7 +81,14 @@ class TodosDAO extends BaseDAO {
     const today = DateUtils.today();
     const all = await this.getAll();
     return all
-      .filter(t => !t.completed && (t.date === today || t.status === 'today'))
+      .filter(t => {
+        if (t.completed) return false;
+        // recurring 待办：用日期匹配
+        if (t.recurring && t.recurring !== 'none') {
+          return this._matchesOnDate(t, today);
+        }
+        return t.date === today || t.status === 'today';
+      })
       .sort((a, b) => {
         // 有 time 的排在前面，按 time 排序；无 time 的按 sortOrder 排后面
         const aHasTime = !!a.time;
@@ -71,32 +104,25 @@ class TodosDAO extends BaseDAO {
     const todo = await this.getById(id);
     if (!todo) return null;
 
-    // 如果是 recurring 待办，完成当前并生成下一条
-    if (todo.recurring && todo.recurring !== 'none' && todo.date) {
-      // 标记当前为已完成
-      await this.update(id, {
-        completed: true,
-        completedAt: new Date().toISOString(),
-        status: 'completed',
-      });
-
-      // 计算下一个日期
+    // recurring 待办：完成后推进 date 到下一个周期，不标记 completed
+    if (todo.recurring && todo.recurring !== 'none') {
       const nextDate = this._nextRecurringDate(todo);
       if (nextDate) {
         // 检查是否超过结束日期
         if (todo.recurringEndDate && nextDate > todo.recurringEndDate) {
-          return await this.getById(id);
+          // 超过结束日期，标记完成
+          return await this.update(id, {
+            completed: true,
+            completedAt: new Date().toISOString(),
+            status: 'completed',
+          });
         }
-        // 创建下一条
-        const { id: _, createdAt: _c, updatedAt: _u, completedAt: _ca, ...rest } = todo;
-        await this.create({
-          ...rest,
+        // 推进到下个周期
+        return await this.update(id, {
           date: nextDate,
-          completed: false,
           status: this._statusForDate(nextDate),
         });
       }
-      return await this.getById(id);
     }
 
     return await this.update(id, {
@@ -104,6 +130,36 @@ class TodosDAO extends BaseDAO {
       completedAt: new Date().toISOString(),
       status: 'completed',
     });
+  }
+
+  // 检查 recurring 待办在指定日期是否匹配
+  _matchesOnDate(t, dateStr) {
+    const checkDate = new Date(dateStr + 'T00:00:00');
+    const checkWeekday = checkDate.getDay();
+
+    const startDateStr = t.date;
+    if (!startDateStr) return false;
+    const startDate = new Date(startDateStr + 'T00:00:00');
+
+    if (checkDate < startDate) return false;
+
+    if (t.recurringEndDate) {
+      const endDate = new Date(t.recurringEndDate + 'T00:00:00');
+      if (checkDate > endDate) return false;
+    }
+
+    if (t.recurring === 'daily') return true;
+    if (t.recurring === 'weekly') return t.weekday === checkWeekday;
+    if (t.recurring === 'biweekly') {
+      if (t.weekday !== checkWeekday) return false;
+      const diffDays = Math.floor((checkDate - startDate) / (1000 * 60 * 60 * 24));
+      const diffWeeks = Math.floor(diffDays / 7);
+      return diffWeeks % 2 === 0;
+    }
+    if (t.recurring === 'monthly') {
+      return checkDate.getDate() === startDate.getDate();
+    }
+    return false;
   }
 
   _nextRecurringDate(todo) {
