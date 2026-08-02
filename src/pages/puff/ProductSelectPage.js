@@ -42,12 +42,7 @@ function ProductSelectPage() {
     if (type === 'monthly') {
       setSelected(m.monthlyFavorites || []);
     } else {
-      // Weekly Selection: 如果为空，继承 Monthly Favorite
-      if ((!m.weeklySelection || m.weeklySelection.length === 0) && m.monthlyFavorites && m.monthlyFavorites.length > 0) {
-        setSelected([...m.monthlyFavorites]);
-      } else {
-        setSelected(m.weeklySelection || []);
-      }
+      setSelected(m.weeklySelection || []);
     }
   };
 
