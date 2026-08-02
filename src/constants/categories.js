@@ -26,7 +26,8 @@ const CATEGORIES = {
     { key: 'pet',           label: '宠物',   icon: '🐾' },
     { key: 'alex',          label: 'Alex',  icon: '👦' },
     { key: 'medical',       label: '医疗',   icon: '💊' },
-    { key: 'entertainment', label: '娱乐',   icon: '🎬' },
+    { key: 'entertainment', label: '娱乐',   icon: '🧸' },
+    { key: 'travel',        label: '旅游',   icon: '✈️' },
     { key: 'other',         label: '其他',   icon: '📦' },
   ],
 
@@ -146,7 +147,7 @@ const CATEGORIES = {
 
 // 辅助：根据 key 获取分类信息
 CATEGORIES.getShoppingCategory = (key) => CATEGORIES.shopping.find(c => c.key === key) || CATEGORIES.shopping[5];
-CATEGORIES.getExpenseCategory = (key) => CATEGORIES.expense.find(c => c.key === key) || CATEGORIES.expense[11];
+CATEGORIES.getExpenseCategory = (key) => CATEGORIES.expense.find(c => c.key === key) || CATEGORIES.expense[12];
 CATEGORIES.getIncomeCategory = (key) => CATEGORIES.income.find(c => c.key === key) || CATEGORIES.income[1];
 CATEGORIES.getProductCategory = (key) => CATEGORIES.product.find(c => c.key === key) || CATEGORIES.product[3];
 CATEGORIES.getInventoryCategory = (key) => CATEGORIES.inventory.find(c => c.key === key) || CATEGORIES.inventory[2];
