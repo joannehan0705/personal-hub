@@ -58,10 +58,10 @@ const CATEGORIES = {
 
   // 泡芙产品分类
   product: [
-    { key: 'classic',  label: '经典款',   icon: '☁️' },
-    { key: 'testing',  label: 'Testing',  icon: '💡' },
-    { key: 'seasonal', label: '节日限定', icon: '🎁' },
+    { key: 'classic',  label: 'Classic',  icon: '☁️' },
     { key: 'special',  label: 'Special',  icon: '🎀' },
+    { key: 'testing',  label: 'Testing',  icon: '💡' },
+    { key: 'seasonal', label: 'Holiday',  icon: '🎁' },
   ],
 
   // Studio 灵感分类
