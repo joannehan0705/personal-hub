@@ -176,11 +176,15 @@ function initDB() {
         db.createObjectStore('allowanceGoals', { keyPath: 'id' });
       }
 
-      // ===== fixedExpense (V8) — 固定支出 =====
+      // ===== fixedExpense (V9) — 固定支出 =====
       if (!db.objectStoreNames.contains('fixedExpense')) {
         const store = db.createObjectStore('fixedExpense', { keyPath: 'id' });
         store.createIndex('startDate', 'startDate');
         store.createIndex('endDate', 'endDate');
+      }
+      // V8→V9 迁移：删除旧的 fixedIncome store（如果存在）
+      if (db.objectStoreNames.contains('fixedIncome') && oldVersion < 9) {
+        db.deleteObjectStore('fixedIncome');
       }
     },
   });
