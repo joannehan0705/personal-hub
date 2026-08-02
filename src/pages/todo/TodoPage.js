@@ -132,6 +132,12 @@ function TodoPage() {
               whiteSpace: 'nowrap',
             }
           }, todo.title),
+          todo.recurring && todo.recurring !== 'none' && h('span', {
+            style: {
+              fontSize: '11px', color: 'var(--color-accent)', backgroundColor: 'var(--color-bg-subtle)',
+              padding: '1px 6px', borderRadius: 'var(--radius-pill)', flexShrink: 0,
+            }
+          }, '🔁', { daily: '日', weekly: '周', biweekly: '双周', monthly: '月', yearly: '年' }[todo.recurring] || ''),
         ),
         // 副信息
         (todo.date || todo.notes) && h('div', {

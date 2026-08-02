@@ -15,6 +15,11 @@ function TodoForm({ open, onClose, todo }) {
   const [time, setTime] = useState('');
   const [someday, setSomeday] = useState(false);
 
+  // Recurring
+  const [recurring, setRecurring] = useState('none');
+  const [recurringEndDate, setRecurringEndDate] = useState('');
+  const [weekday, setWeekday] = useState(null);
+
   useEffect(() => {
     if (open) {
       if (todo) {
@@ -24,6 +29,9 @@ function TodoForm({ open, onClose, todo }) {
         setDate(todo.date || '');
         setTime(todo.time || '');
         setSomeday(todo.status === 'someday');
+        setRecurring(todo.recurring || 'none');
+        setRecurringEndDate(todo.recurringEndDate || '');
+        setWeekday(todo.weekday != null ? todo.weekday : null);
       } else {
         setTitle('');
         setNotes('');
@@ -31,6 +39,9 @@ function TodoForm({ open, onClose, todo }) {
         setDate(DateUtils.today());
         setTime('');
         setSomeday(false);
+        setRecurring('none');
+        setRecurringEndDate('');
+        setWeekday(null);
       }
     }
   }, [open, todo]);
@@ -69,7 +80,15 @@ function TodoForm({ open, onClose, todo }) {
       time: someday ? null : (time || null),
       status: finalStatus,
       completed: false,
+      recurring,
+      weekday: (recurring === 'weekly' || recurring === 'biweekly') ? weekday : null,
+      recurringEndDate: recurringEndDate || null,
     };
+
+    // recurring 待办：确保有日期作为起始
+    if (recurring !== 'none' && !someday && !date) {
+      data.date = DateUtils.today();
+    }
 
     if (todo) {
       await DAO.todos.update(todo.id, data);
@@ -141,8 +160,50 @@ function TodoForm({ open, onClose, todo }) {
         someday && h('span', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)' } }, '没有截止日期，随时可以做')
       ),
 
-      // 日期和时间（时间待定时不显示）
-      !someday && h(Input, {
+      // 重复设置（非时间待定时可用）
+      !someday && h('div', null,
+        h('label', {
+          style: { fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', paddingLeft: 'var(--space-xs)', display: 'block', marginBottom: 'var(--space-xs)' }
+        }, '重复'),
+        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' } },
+          APP_CONFIG.recurringFrequencies.map(freq =>
+            h('button', {
+              key: freq.key,
+              onClick: () => { Haptics.selection(); setRecurring(freq.key); },
+              style: {
+                padding: '8px 14px', borderRadius: 'var(--radius-pill)',
+                fontSize: '14px', fontWeight: 500,
+                backgroundColor: recurring === freq.key ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
+                color: recurring === freq.key ? '#FFFFFF' : 'var(--color-text-secondary)',
+              }
+            }, freq.label)
+          )
+        ),
+      ),
+
+      // 星期选择（weekly/biweekly 时显示）
+      !someday && (recurring === 'weekly' || recurring === 'biweekly') && h('div', null,
+        h('label', {
+          style: { fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', paddingLeft: 'var(--space-xs)', display: 'block', marginBottom: 'var(--space-xs)' }
+        }, recurring === 'weekly' ? '每周' : '每两周', '哪一天'),
+        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)' } },
+          APP_CONFIG.weekdays.map(w =>
+            h('button', {
+              key: w.key,
+              onClick: () => { Haptics.selection(); setWeekday(w.key); },
+              style: {
+                padding: '8px 14px', borderRadius: 'var(--radius-pill)',
+                fontSize: '14px', fontWeight: 500,
+                backgroundColor: weekday === w.key ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
+                color: weekday === w.key ? '#FFFFFF' : 'var(--color-text-secondary)',
+              }
+            }, w.label)
+          )
+        ),
+      ),
+
+      // 日期和时间（时间待定时不显示；weekly/biweekly 时不显示日期，用星期选择器替代）
+      !someday && recurring !== 'weekly' && recurring !== 'biweekly' && h(Input, {
         label: '日期',
         value: date,
         onChange: setDate,
@@ -154,6 +215,15 @@ function TodoForm({ open, onClose, todo }) {
         value: time,
         onChange: setTime,
         type: 'time',
+      }),
+
+      // 结束日期（recurring 模式下显示）
+      !someday && recurring !== 'none' && h(Input, {
+        label: '结束日期（可选）',
+        value: recurringEndDate,
+        onChange: setRecurringEndDate,
+        type: 'date',
+        placeholder: '不选则持续到手动取消',
       }),
 
       h(Button, { fullWidth: true, onClick: handleSave }, todo ? '保存' : '添加'),

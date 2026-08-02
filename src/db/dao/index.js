@@ -68,11 +68,69 @@ class TodosDAO extends BaseDAO {
   }
 
   async complete(id) {
+    const todo = await this.getById(id);
+    if (!todo) return null;
+
+    // 如果是 recurring 待办，完成当前并生成下一条
+    if (todo.recurring && todo.recurring !== 'none' && todo.date) {
+      // 标记当前为已完成
+      await this.update(id, {
+        completed: true,
+        completedAt: new Date().toISOString(),
+        status: 'completed',
+      });
+
+      // 计算下一个日期
+      const nextDate = this._nextRecurringDate(todo);
+      if (nextDate) {
+        // 检查是否超过结束日期
+        if (todo.recurringEndDate && nextDate > todo.recurringEndDate) {
+          return await this.getById(id);
+        }
+        // 创建下一条
+        const { id: _, createdAt: _c, updatedAt: _u, completedAt: _ca, ...rest } = todo;
+        await this.create({
+          ...rest,
+          date: nextDate,
+          completed: false,
+          status: this._statusForDate(nextDate),
+        });
+      }
+      return await this.getById(id);
+    }
+
     return await this.update(id, {
       completed: true,
       completedAt: new Date().toISOString(),
       status: 'completed',
     });
+  }
+
+  _nextRecurringDate(todo) {
+    const base = DateUtils.parse(todo.date);
+    if (!base) return null;
+
+    if (todo.recurring === 'daily') {
+      base.setDate(base.getDate() + 1);
+    } else if (todo.recurring === 'weekly') {
+      base.setDate(base.getDate() + 7);
+    } else if (todo.recurring === 'biweekly') {
+      base.setDate(base.getDate() + 14);
+    } else if (todo.recurring === 'monthly') {
+      base.setMonth(base.getMonth() + 1);
+    } else if (todo.recurring === 'yearly') {
+      base.setFullYear(base.getFullYear() + 1);
+    } else {
+      return null;
+    }
+    return DateUtils.toDateStr(base);
+  }
+
+  _statusForDate(dateStr) {
+    const today = DateUtils.today();
+    if (dateStr === today) return 'today';
+    if (dateStr && DateUtils.isThisWeek(dateStr)) return 'week';
+    return 'later';
   }
 
   async uncomplete(id) {
