@@ -205,8 +205,8 @@ function FinancePage() {
 
       // 月度概览
       h(Card, { style: { marginBottom: 'var(--space-md)' } },
-        // 固定收入行
-        fixedIncomeTotal > 0 && h('div', {
+        // 固定收入行（始终显示，金额为0时也可进入编辑）
+        h('div', {
           style: {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             paddingBottom: 'var(--space-sm)', marginBottom: 'var(--space-sm)',
