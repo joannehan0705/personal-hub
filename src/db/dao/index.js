@@ -23,19 +23,79 @@ class TodosDAO extends BaseDAO {
     const weekEnd = DateUtils.endOfWeek();
     const all = await this.getAll();
 
+    // ===== 本周分组：包含本周一到周日的所有 task（未完成+已完成） =====
+    if (status === 'week') {
+      const weekItems = all.filter(t => {
+        // recurring 待办：检查本周内是否匹配
+        if (t.recurring && t.recurring !== 'none') {
+          if (t.completed) return false; // 已完成的 recurring 不在周视图显示
+          for (let d = new Date(weekStart + 'T00:00:00'); d <= new Date(weekEnd + 'T00:00:00'); d.setDate(d.getDate() + 1)) {
+            if (this._matchesOnDate(t, DateUtils.toDateStr(d))) return true;
+          }
+          return false;
+        }
+        // 普通待办：日期在本周内
+        if (!t.date) return false;
+        return t.date >= weekStart && t.date <= weekEnd;
+      });
+
+      // 排序：逾期 → 今天 → 本周未来 → 已完成
+      const sortWeek = (a, b) => {
+        // 已完成的排最后
+        if (a.completed && !b.completed) return 1;
+        if (!a.completed && b.completed) return -1;
+        if (a.completed && b.completed) {
+          // 已完成的按完成时间降序
+          return (b.completedAt || '').localeCompare(a.completedAt || '');
+        }
+
+        // 未完成的：逾期 → 今天 → 本周未来
+        const aOverdue = a.date < today;
+        const bOverdue = b.date < today;
+        const aToday = a.date === today;
+        const bToday = b.date === today;
+
+        // 逾期组优先
+        if (aOverdue && !bOverdue) return -1;
+        if (!aOverdue && bOverdue) return 1;
+        // 同为逾期：有时间的按时间排，没时间的按优先级
+        if (aOverdue && bOverdue) {
+          if (a.time && b.time) return a.time.localeCompare(b.time);
+          if (a.time && !b.time) return -1;
+          if (!a.time && b.time) return 1;
+          const pa = PRIORITY_WEIGHT[a.priority] || 0;
+          const pb = PRIORITY_WEIGHT[b.priority] || 0;
+          if (pb !== pa) return pb - pa;
+          return 0;
+        }
+
+        // 今天组
+        if (aToday && !bToday) return -1;
+        if (!aToday && bToday) return 1;
+        if (aToday && bToday) {
+          if (a.time && b.time) return a.time.localeCompare(b.time);
+          if (a.time && !b.time) return -1;
+          if (!a.time && b.time) return 1;
+          const pa = PRIORITY_WEIGHT[a.priority] || 0;
+          const pb = PRIORITY_WEIGHT[b.priority] || 0;
+          if (pb !== pa) return pb - pa;
+          return 0;
+        }
+
+        // 本周未来：按日期排，同日期按时间排
+        const dateCompare = (a.date || '').localeCompare(b.date || '');
+        if (dateCompare !== 0) return dateCompare;
+        return (a.time || '').localeCompare(b.time || '');
+      };
+
+      return weekItems.sort(sortWeek);
+    }
+
     const filtered = all.filter(t => {
       if (t.completed) return false;
       // recurring 待办：用日期匹配逻辑
       if (t.recurring && t.recurring !== 'none') {
         if (status === 'today') return this._matchesOnDate(t, today);
-        if (status === 'week') {
-          // 检查本周内是否有匹配的日期（非今天）
-          for (let d = new Date(weekStart + 'T00:00:00'); d <= new Date(weekEnd + 'T00:00:00'); d.setDate(d.getDate() + 1)) {
-            const ds = DateUtils.toDateStr(d);
-            if (ds !== today && this._matchesOnDate(t, ds)) return true;
-          }
-          return false;
-        }
         if (status === 'later') {
           // 检查本周之后是否有匹配日期
           const afterWeek = new Date(weekEnd + 'T00:00:00');
@@ -54,7 +114,6 @@ class TodosDAO extends BaseDAO {
       // 日期在今天之前的未完成 task → 归入"等待回复"
       const isOverdue = t.date && t.date < today;
       if (status === 'today') return (t.date === today || t.status === 'today') && !isOverdue;
-      if (status === 'week') return t.date && t.date >= weekStart && t.date <= weekEnd && t.date !== today && !isOverdue;
       if (status === 'later') return t.date && t.date > weekEnd && t.status !== 'someday';
       if (status === 'someday') return t.status === 'someday';
       if (status === 'waiting') return isOverdue || t.status === 'waiting';
