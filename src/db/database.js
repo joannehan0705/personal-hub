@@ -176,9 +176,9 @@ function initDB() {
         db.createObjectStore('allowanceGoals', { keyPath: 'id' });
       }
 
-      // ===== fixedIncome (V8) — 固定收入 =====
-      if (!db.objectStoreNames.contains('fixedIncome')) {
-        const store = db.createObjectStore('fixedIncome', { keyPath: 'id' });
+      // ===== fixedExpense (V8) — 固定支出 =====
+      if (!db.objectStoreNames.contains('fixedExpense')) {
+        const store = db.createObjectStore('fixedExpense', { keyPath: 'id' });
         store.createIndex('startDate', 'startDate');
         store.createIndex('endDate', 'endDate');
       }

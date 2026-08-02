@@ -16,7 +16,7 @@ function FinancePage() {
   const [editingTx, setEditingTx] = useState(null);
   const [viewMode, setViewMode] = useState('date'); // 'date' | 'category'
   const [selectedCategory, setSelectedCategory] = useState(null); // 点击分类后展开看明细
-  const [fixedIncomeTotal, setFixedIncomeTotal] = useState(0);
+  const [fixedExpenseTotal, setFixedExpenseTotal] = useState(0);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -36,11 +36,11 @@ function FinancePage() {
       DAO.transactions.getByMonth(financeMonth, 'personal'),
       DAO.transactions.getMonthlySummary(financeMonth, 'personal'),
       DAO.transactions.getCategorySummary(financeMonth, 'personal'),
-      DAO.fixedIncome.getMonthlyTotal(financeMonth),
+      DAO.fixedExpense.getMonthlyTotal(financeMonth),
     ]);
     setTransactions(txs);
     setSummary(sum);
-    setFixedIncomeTotal(fixedTotal);
+    setFixedExpenseTotal(fixedTotal);
 
     // 构建分类汇总
     const merged = {};
@@ -205,7 +205,7 @@ function FinancePage() {
 
       // 月度概览
       h(Card, { style: { marginBottom: 'var(--space-md)' } },
-        // 固定收入行（始终显示，金额为0时也可进入编辑）
+        // 固定支出行（始终显示，金额为0时也可进入编辑）
         h('div', {
           style: {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -214,11 +214,11 @@ function FinancePage() {
           },
         },
           h('div', { style: { display: 'flex', alignItems: 'center', gap: '6px' } },
-            h('span', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)' } }, '固定收入'),
-            h('span', { style: { fontSize: '15px', fontWeight: 600, color: 'var(--color-complete)' }, className: 'numeric' }, FormatUtils.money(fixedIncomeTotal)),
+            h('span', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)' } }, '固定支出'),
+            h('span', { style: { fontSize: '15px', fontWeight: 600, color: 'var(--color-deadline)' }, className: 'numeric' }, FormatUtils.money(fixedExpenseTotal)),
           ),
           h('button', {
-            onClick: () => navigate('/finance/fixed-income'),
+            onClick: () => navigate('/finance/fixed-expense'),
             style: {
               display: 'flex', alignItems: 'center', gap: '3px',
               padding: '4px 10px', borderRadius: 'var(--radius-pill)',

@@ -953,12 +953,12 @@ class WishlistDAO extends BaseDAO {
   }
 }
 
-// ===== 固定收入 DAO =====
+// ===== 固定支出 DAO =====
 
-class FixedIncomeDAO extends BaseDAO {
-  constructor() { super('fixedIncome'); }
+class FixedExpenseDAO extends BaseDAO {
+  constructor() { super('fixedExpense'); }
 
-  // 获取某月有效的固定收入记录
+  // 获取某月有效的固定支出记录
   async getActive(monthStr) {
     const all = await this.getAll();
     const [start, end] = DateUtils.monthRange(monthStr);
@@ -968,7 +968,7 @@ class FixedIncomeDAO extends BaseDAO {
     });
   }
 
-  // 获取某月固定收入总额
+  // 获取某月固定支出总额
   async getMonthlyTotal(monthStr) {
     const active = await this.getActive(monthStr);
     return active.reduce((sum, r) => sum + (r.amount || 0), 0);
@@ -997,7 +997,7 @@ window.DAO = {
   notes: new NotesDAO(),
   menus: new MenusDAO(),
   wishlist: new WishlistDAO(),
-  fixedIncome: new FixedIncomeDAO(),
+  fixedExpense: new FixedExpenseDAO(),
 };
 
 })();
