@@ -51,11 +51,13 @@ class TodosDAO extends BaseDAO {
         return false;
       }
       // 普通待办
-      if (status === 'today') return t.date === today || t.status === 'today';
-      if (status === 'week') return t.date && t.date >= weekStart && t.date <= weekEnd && t.date !== today;
+      // 日期在今天之前的未完成 task → 归入"等待回复"
+      const isOverdue = t.date && t.date < today;
+      if (status === 'today') return (t.date === today || t.status === 'today') && !isOverdue;
+      if (status === 'week') return t.date && t.date >= weekStart && t.date <= weekEnd && t.date !== today && !isOverdue;
       if (status === 'later') return t.date && t.date > weekEnd && t.status !== 'someday';
       if (status === 'someday') return t.status === 'someday';
-      if (status === 'waiting') return t.status === 'waiting';
+      if (status === 'waiting') return isOverdue || t.status === 'waiting';
       return false;
     });
 
