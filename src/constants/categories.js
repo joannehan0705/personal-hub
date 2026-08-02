@@ -61,7 +61,7 @@ const CATEGORIES = {
     { key: 'classic',  label: 'Classic',  icon: '☁️' },
     { key: 'special',  label: 'Special',  icon: '🎀' },
     { key: 'testing',  label: 'Testing',  icon: '💡' },
-    { key: 'seasonal', label: 'Holiday',  icon: '🎁' },
+    { key: 'seasonal', label: 'Seasonal', icon: '🎁' },
   ],
 
   // Studio 灵感分类
