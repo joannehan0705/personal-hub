@@ -10,6 +10,7 @@ function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'category'
 
   useEffect(() => {
     loadProducts();
@@ -69,7 +70,7 @@ function ProductsPage() {
         h('div', {
           style: { fontSize: '13px', color: 'var(--color-text-tertiary)', display: 'flex', alignItems: 'center', gap: 'var(--space-xs)', marginTop: '2px' }
         },
-          h(Tag, null, cat.label),
+          viewMode === 'list' && h(Tag, null, cat.label),
           h('span', { className: 'numeric' }, FormatUtils.money(product.price)),
         ),
       ),
@@ -87,6 +88,17 @@ function ProductsPage() {
     );
   };
 
+  // 按分类分组
+  const groupedByCategory = {};
+  for (const cat of CATEGORIES.product) {
+    groupedByCategory[cat.key] = [];
+  }
+  for (const p of products) {
+    const cat = CATEGORIES.getProductCategory(p.category);
+    if (!groupedByCategory[cat.key]) groupedByCategory[cat.key] = [];
+    groupedByCategory[cat.key].push(p);
+  }
+
   return h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
     h(NavBar, {
       title: '产品', showBack: true,
@@ -97,10 +109,48 @@ function ProductsPage() {
     }),
 
     h('div', { className: 'scroll-container page' },
-      h('div', { className: 'section-header' }, '产品列表'),
+      // 视图切换
+      h('div', {
+        style: { display: 'flex', gap: 'var(--space-xs)', marginBottom: 'var(--space-md)' }
+      },
+        h('button', {
+          onClick: () => { Haptics.selection(); setViewMode('list'); },
+          style: {
+            flex: 1, padding: '8px', borderRadius: 'var(--radius-sm)',
+            fontSize: '14px', fontWeight: 500,
+            backgroundColor: viewMode === 'list' ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
+            color: viewMode === 'list' ? '#FFFFFF' : 'var(--color-text-secondary)',
+          }
+        }, '列表'),
+        h('button', {
+          onClick: () => { Haptics.selection(); setViewMode('category'); },
+          style: {
+            flex: 1, padding: '8px', borderRadius: 'var(--radius-sm)',
+            fontSize: '14px', fontWeight: 500,
+            backgroundColor: viewMode === 'category' ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
+            color: viewMode === 'category' ? '#FFFFFF' : 'var(--color-text-secondary)',
+          }
+        }, '分类')
+      ),
+
       products.length === 0
         ? h(EmptyState, { icon: '🧁', title: '还没有产品', subtitle: '点击右上角 + 添加产品' })
-        : h('div', null, products.map(renderProduct))
+        : viewMode === 'list'
+          ? h('div', null, products.map(renderProduct))
+          : h('div', null,
+              CATEGORIES.product.map(cat => {
+                const items = groupedByCategory[cat.key] || [];
+                if (items.length === 0) return null;
+                const total = items.reduce((sum, p) => sum + (p.price || 0), 0);
+                return h('div', { key: cat.key },
+                  h('div', { className: 'section-header' },
+                    h('span', null, `${cat.icon} ${cat.label}`),
+                    h('span', { className: 'count' }, `${items.length} 款 · ${FormatUtils.money(total)}`)
+                  ),
+                  items.map(renderProduct)
+                );
+              })
+            )
     ),
 
     h(ProductForm, {
