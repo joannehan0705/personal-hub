@@ -17,9 +17,11 @@ const CATEGORIES = {
   // 支出分类（生活记账，不含泡芙）
   expense: [
     { key: 'food',          label: '餐饮',   icon: '🍽️' },
-    { key: 'daily',         label: '日用品', icon: '🧻' },
+    { key: 'daily',         label: '日用',   icon: '🧻' },
+    { key: 'grocery',       label: '超市',   icon: '🛒' },
     { key: 'transport',     label: '交通',   icon: '🚗' },
-    { key: 'shopping',      label: '购物',   icon: '🛒' },
+    { key: 'life',          label: '生活',   icon: '⚡️' },
+    { key: 'shopping',      label: '购物',   icon: '🛍️' },
     { key: 'home',          label: '居家',   icon: '🏠' },
     { key: 'pet',           label: '宠物',   icon: '🐾' },
     { key: 'alex',          label: 'Alex',  icon: '👦' },
@@ -144,7 +146,7 @@ const CATEGORIES = {
 
 // 辅助：根据 key 获取分类信息
 CATEGORIES.getShoppingCategory = (key) => CATEGORIES.shopping.find(c => c.key === key) || CATEGORIES.shopping[5];
-CATEGORIES.getExpenseCategory = (key) => CATEGORIES.expense.find(c => c.key === key) || CATEGORIES.expense[9];
+CATEGORIES.getExpenseCategory = (key) => CATEGORIES.expense.find(c => c.key === key) || CATEGORIES.expense[11];
 CATEGORIES.getIncomeCategory = (key) => CATEGORIES.income.find(c => c.key === key) || CATEGORIES.income[1];
 CATEGORIES.getProductCategory = (key) => CATEGORIES.product.find(c => c.key === key) || CATEGORIES.product[3];
 CATEGORIES.getInventoryCategory = (key) => CATEGORIES.inventory.find(c => c.key === key) || CATEGORIES.inventory[2];
