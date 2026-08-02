@@ -24,6 +24,9 @@ function TransactionForm({ open, onClose, type: initialType, transaction }) {
   // 分期字段
   const [installmentTotal, setInstallmentTotal] = useState('3');
 
+  // Payment Tag
+  const [paymentTag, setPaymentTag] = useState(null);
+
   useEffect(() => {
     if (open) {
       if (transaction) {
@@ -36,6 +39,7 @@ function TransactionForm({ open, onClose, type: initialType, transaction }) {
         setRecurring(transaction.recurring || 'monthly');
         setRecurringEndDate(transaction.recurringEndDate || '');
         setInstallmentTotal(String(transaction.installmentTotal || '3'));
+        setPaymentTag(transaction.paymentTag || null);
       } else {
         setType(initialType || 'expense');
         setAmount('');
@@ -46,6 +50,7 @@ function TransactionForm({ open, onClose, type: initialType, transaction }) {
         setRecurring('monthly');
         setRecurringEndDate('');
         setInstallmentTotal('3');
+        setPaymentTag(null);
       }
     }
   }, [open, transaction, initialType]);
@@ -82,6 +87,7 @@ function TransactionForm({ open, onClose, type: initialType, transaction }) {
         recordType: 'installment',
         installmentTotal: installNum,
         originalAmount: amt,
+        paymentTag,
       };
 
       await DAO.transactions.createInstallment(data, installNum);
@@ -99,6 +105,7 @@ function TransactionForm({ open, onClose, type: initialType, transaction }) {
       notes: notes.trim(),
       scope: 'personal',
       recordType,
+      paymentTag,
     };
 
     if (recordType === 'subscription') {
@@ -239,6 +246,36 @@ function TransactionForm({ open, onClose, type: initialType, transaction }) {
                 color: category === cat.key ? '#FFFFFF' : 'var(--color-text-secondary)',
               }
             }, `${cat.icon} ${cat.label}`)
+          )
+        )
+      ),
+
+      // Payment Tag 选择（可选）
+      h('div', null,
+        h('label', {
+          style: { fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)', paddingLeft: 'var(--space-xs)', display: 'block', marginBottom: 'var(--space-xs)' }
+        }, 'Payment'),
+        h('div', { style: { display: 'flex', gap: 'var(--space-xs)' } },
+          h('button', {
+            onClick: () => { Haptics.selection(); setPaymentTag(null); },
+            style: {
+              padding: '8px 14px', borderRadius: 'var(--radius-pill)',
+              fontSize: '14px', fontWeight: 500,
+              backgroundColor: !paymentTag ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
+              color: !paymentTag ? '#FFFFFF' : 'var(--color-text-secondary)',
+            }
+          }, '无'),
+          CATEGORIES.paymentTags.map(tag =>
+            h('button', {
+              key: tag.key,
+              onClick: () => { Haptics.selection(); setPaymentTag(paymentTag === tag.key ? null : tag.key); },
+              style: {
+                padding: '8px 14px', borderRadius: 'var(--radius-pill)',
+                fontSize: '14px', fontWeight: 500,
+                backgroundColor: paymentTag === tag.key ? 'var(--color-accent)' : 'var(--color-bg-subtle)',
+                color: paymentTag === tag.key ? '#FFFFFF' : 'var(--color-text-secondary)',
+              }
+            }, `${tag.icon} ${tag.label}`)
           )
         )
       ),

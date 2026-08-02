@@ -91,6 +91,23 @@ function categorizeExpense(transactions, scope) {
     .sort((a, b) => b.value - a.value);
 }
 
+function summarizeByPaymentTag(transactions) {
+  const map = {};
+  let total = 0;
+  for (const t of transactions) {
+    if (!t.paymentTag) continue;
+    if (!map[t.paymentTag]) map[t.paymentTag] = 0;
+    map[t.paymentTag] += t.amount || 0;
+    total += t.amount || 0;
+  }
+  return Object.entries(map)
+    .map(([key, amount]) => {
+      const tag = CATEGORIES.getPaymentTag(key);
+      return { key, label: tag ? tag.label : key, icon: tag ? tag.icon : '', value: amount, percent: total > 0 ? Math.round((amount / total) * 100) : 0 };
+    })
+    .sort((a, b) => b.value - a.value);
+}
+
 function buildTrendData(transactions, range, type) {
   // type: 'expense' | 'income' | 'balance'
   const period = range.period;
@@ -323,6 +340,7 @@ async function loadAllData(range) {
       summary: summarizeTransactions(personalTx),
       prevSummary: summarizeTransactions(prevPersonalTx),
       categorySummary: categorizeExpense(personalTx, 'personal'),
+      paymentBreakdown: summarizeByPaymentTag(personalTx),
       trendData: personalTrend,
       topSpending: personalTx.filter(t => t.type === 'expense').sort((a, b) => (b.amount || 0) - (a.amount || 0)).slice(0, 5),
       days,
@@ -332,6 +350,7 @@ async function loadAllData(range) {
       summary: summarizeTransactions(puffTx),
       prevSummary: summarizeTransactions(prevPuffTx),
       categorySummary: categorizeExpense(puffTx, 'puff'),
+      paymentBreakdown: summarizeByPaymentTag(puffTx),
       revenueTrend: puffRevenueTrend,
       expenseTrend: puffExpenseTrend,
       profitTrend: puffProfitTrend,

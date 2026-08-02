@@ -11,6 +11,7 @@ const ROUTES = [
   { pattern: /^\/$/,                        component: () => HomePage,     tab: 'home' },
   { pattern: /^\/todo/,                     component: () => TodoPage,     tab: 'home' },
   { pattern: /^\/shopping/,                 component: () => ShoppingPage, tab: 'home' },
+  { pattern: /^\/finance\/fixed-income/,     component: () => FixedIncomePage, tab: 'finance' },
   { pattern: /^\/finance/,                  component: () => FinancePage,  tab: 'finance' },
   { pattern: /^\/alex/,                     component: () => AlexPage,     tab: 'alex' },
   { pattern: /^\/pets/,                     component: () => PetsPage,     tab: 'home' },

@@ -49,7 +49,7 @@ function LifeReviewSection({ data, range }) {
     );
   }
 
-  const { summary, prevSummary, categorySummary, trendData, topSpending, days } = data;
+  const { summary, prevSummary, categorySummary, paymentBreakdown, trendData, topSpending, days } = data;
   const dailyAvg = days > 0 ? summary.expense / days : 0;
 
   // 找出最高消费日
@@ -92,6 +92,19 @@ function LifeReviewSection({ data, range }) {
       centerValue: FormatUtils.money(Math.round(summary.expense)).replace('$', '$'),
       centerLabel: 'Total',
     }),
+    // Payment Breakdown
+    paymentBreakdown && paymentBreakdown.length > 0 && h('div', { style: SUBCARD_STYLE },
+      h('div', { style: { fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-sm)' } }, 'Payment Breakdown'),
+      paymentBreakdown.map((p, i) => h('div', {
+        key: i,
+        style: { display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-xs) 0' },
+      },
+        h('span', { style: { fontSize: '18px', flexShrink: 0 } }, p.icon),
+        h('span', { style: { flex: 1, fontSize: '14px', color: 'var(--color-text-primary)' } }, p.label),
+        h('span', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)', flexShrink: 0 }, className: 'numeric' }, `${p.percent}%`),
+        h('span', { style: { fontSize: '14px', fontWeight: 600, color: 'var(--color-text-primary)', flexShrink: 0 }, className: 'numeric' }, FormatUtils.money(Math.round(p.value))),
+      )),
+    ),
     // Expense Trend
     trendData && trendData.data.some(v => v > 0) && h(TrendChart, {
       title: 'Expense Trend',
@@ -130,7 +143,7 @@ function PuffFinanceReviewSection({ data, range }) {
     );
   }
 
-  const { summary, prevSummary, categorySummary, revenueTrend, expenseTrend, profitTrend } = data;
+  const { summary, prevSummary, categorySummary, paymentBreakdown, revenueTrend, expenseTrend, profitTrend } = data;
   const profit = summary.balance;
   const margin = summary.income > 0 ? Math.round((profit / summary.income) * 100) : 0;
 
@@ -156,6 +169,19 @@ function PuffFinanceReviewSection({ data, range }) {
       centerValue: FormatUtils.money(Math.round(summary.expense)).replace('$', '$'),
       centerLabel: 'Total',
     }),
+    // Payment Breakdown
+    paymentBreakdown && paymentBreakdown.length > 0 && h('div', { style: SUBCARD_STYLE },
+      h('div', { style: { fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-sm)' } }, 'Payment Breakdown'),
+      paymentBreakdown.map((p, i) => h('div', {
+        key: i,
+        style: { display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-xs) 0' },
+      },
+        h('span', { style: { fontSize: '18px', flexShrink: 0 } }, p.icon),
+        h('span', { style: { flex: 1, fontSize: '14px', color: 'var(--color-text-primary)' } }, p.label),
+        h('span', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)', flexShrink: 0 }, className: 'numeric' }, `${p.percent}%`),
+        h('span', { style: { fontSize: '14px', fontWeight: 600, color: 'var(--color-text-primary)', flexShrink: 0 }, className: 'numeric' }, FormatUtils.money(Math.round(p.value))),
+      )),
+    ),
     // Revenue Trend
     revenueTrend && revenueTrend.data.some(v => v > 0) && h(TrendChart, {
       title: 'Revenue Trend',

@@ -127,6 +127,12 @@ const CATEGORIES = {
     { key: 'tool',       label: '工具',   icon: '🔧' },
   ],
 
+  // Payment Tags（信用卡选择，不影响金额币种）
+  paymentTags: [
+    { key: 'cn_card', label: '中国信用卡', icon: '🇨🇳' },
+    { key: 'us_card', label: '美国信用卡', icon: '🇺🇸' },
+  ],
+
   // 社交平台
   socialPlatforms: [
     { key: 'instagram',   label: 'Instagram',  icon: '📷' },
@@ -144,6 +150,7 @@ CATEGORIES.getProductCategory = (key) => CATEGORIES.product.find(c => c.key === 
 CATEGORIES.getInventoryCategory = (key) => CATEGORIES.inventory.find(c => c.key === key) || CATEGORIES.inventory[2];
 CATEGORIES.getPuffExpenseCategory = (key) => CATEGORIES.puffExpense.find(c => c.key === key) || CATEGORIES.puffExpense[7];
 CATEGORIES.getPuffIncomeCategory = (key) => CATEGORIES.puffIncome.find(c => c.key === key) || CATEGORIES.puffIncome[2];
+CATEGORIES.getPaymentTag = (key) => CATEGORIES.paymentTags.find(t => t.key === key) || null;
 CATEGORIES.getNoteCategory = (key) => CATEGORIES.notes.find(c => c.key === key) || CATEGORIES.notes[3];
 
 window.CATEGORIES = CATEGORIES;

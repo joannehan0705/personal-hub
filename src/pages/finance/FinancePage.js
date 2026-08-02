@@ -16,6 +16,7 @@ function FinancePage() {
   const [editingTx, setEditingTx] = useState(null);
   const [viewMode, setViewMode] = useState('date'); // 'date' | 'category'
   const [selectedCategory, setSelectedCategory] = useState(null); // 点击分类后展开看明细
+  const [fixedIncomeTotal, setFixedIncomeTotal] = useState(0);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -31,13 +32,15 @@ function FinancePage() {
   }, [dataVersion, financeMonth]);
 
   const loadData = async () => {
-    const [txs, sum, catSum] = await Promise.all([
+    const [txs, sum, catSum, fixedTotal] = await Promise.all([
       DAO.transactions.getByMonth(financeMonth, 'personal'),
       DAO.transactions.getMonthlySummary(financeMonth, 'personal'),
       DAO.transactions.getCategorySummary(financeMonth, 'personal'),
+      DAO.fixedIncome.getMonthlyTotal(financeMonth),
     ]);
     setTransactions(txs);
     setSummary(sum);
+    setFixedIncomeTotal(fixedTotal);
 
     // 构建分类汇总
     const merged = {};
@@ -136,6 +139,15 @@ function FinancePage() {
       badge = h('span', { style: { fontSize: '11px', color: '#8B7EC8', backgroundColor: 'var(--color-bg-subtle)', padding: '1px 6px', borderRadius: 'var(--radius-pill)', marginLeft: '6px', flexShrink: 0 } }, `${tx.installmentNo}/${tx.installmentTotal}期`);
     }
 
+    // Payment tag badge
+    let payBadge = null;
+    if (tx.paymentTag) {
+      const pt = CATEGORIES.getPaymentTag(tx.paymentTag);
+      if (pt) {
+        payBadge = h('span', { style: { fontSize: '11px', backgroundColor: 'var(--color-bg-subtle)', padding: '1px 6px', borderRadius: 'var(--radius-pill)', marginLeft: '6px', flexShrink: 0 } }, pt.icon);
+      }
+    }
+
     return h('div', {
       key: tx.id,
       onClick: () => handleEdit(tx),
@@ -152,7 +164,8 @@ function FinancePage() {
       h('div', { style: { flex: 1, minWidth: 0 } },
         h('div', { style: { fontSize: '17px', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center' } },
           h('span', null, cat.label),
-          badge
+          badge,
+          payBadge
         ),
         tx.notes && h('div', {
           style: { fontSize: '13px', color: 'var(--color-text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
@@ -192,6 +205,28 @@ function FinancePage() {
 
       // 月度概览
       h(Card, { style: { marginBottom: 'var(--space-md)' } },
+        // 固定收入行
+        fixedIncomeTotal > 0 && h('div', {
+          style: {
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            paddingBottom: 'var(--space-sm)', marginBottom: 'var(--space-sm)',
+            borderBottom: '1px solid var(--color-border-light)',
+          },
+        },
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: '6px' } },
+            h('span', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)' } }, '固定收入'),
+            h('span', { style: { fontSize: '15px', fontWeight: 600, color: 'var(--color-complete)' }, className: 'numeric' }, FormatUtils.money(fixedIncomeTotal)),
+          ),
+          h('button', {
+            onClick: () => navigate('/finance/fixed-income'),
+            style: {
+              display: 'flex', alignItems: 'center', gap: '3px',
+              padding: '4px 10px', borderRadius: 'var(--radius-pill)',
+              backgroundColor: 'var(--color-bg-subtle)', border: 'none',
+              fontSize: '12px', color: 'var(--color-text-secondary)', cursor: 'pointer',
+            },
+          }, '编辑', h(Icon, { name: 'chevronRight', size: 12, color: 'var(--color-text-tertiary)' })),
+        ),
         h('div', { style: { display: 'flex', justifyContent: 'space-around', textAlign: 'center' } },
           h('div', null,
             h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '收入'),

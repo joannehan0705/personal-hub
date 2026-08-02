@@ -953,6 +953,28 @@ class WishlistDAO extends BaseDAO {
   }
 }
 
+// ===== 固定收入 DAO =====
+
+class FixedIncomeDAO extends BaseDAO {
+  constructor() { super('fixedIncome'); }
+
+  // 获取某月有效的固定收入记录
+  async getActive(monthStr) {
+    const all = await this.getAll();
+    const [start, end] = DateUtils.monthRange(monthStr);
+    return all.filter(r => {
+      if (!r.startDate) return false;
+      return r.startDate <= end && (!r.endDate || r.endDate >= start);
+    });
+  }
+
+  // 获取某月固定收入总额
+  async getMonthlyTotal(monthStr) {
+    const active = await this.getActive(monthStr);
+    return active.reduce((sum, r) => sum + (r.amount || 0), 0);
+  }
+}
+
 // ===== 统一注册 =====
 window.DAO = {
   todos: new TodosDAO(),
@@ -975,6 +997,7 @@ window.DAO = {
   notes: new NotesDAO(),
   menus: new MenusDAO(),
   wishlist: new WishlistDAO(),
+  fixedIncome: new FixedIncomeDAO(),
 };
 
 })();

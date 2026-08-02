@@ -117,6 +117,15 @@ function PuffFinancePage() {
       badge = h('span', { style: { fontSize: '11px', color: '#8B7EC8', backgroundColor: 'var(--color-bg-subtle)', padding: '1px 6px', borderRadius: 'var(--radius-pill)', marginLeft: '6px', flexShrink: 0 } }, `${tx.installmentNo}/${tx.installmentTotal}期`);
     }
 
+    // Payment tag badge
+    let payBadge = null;
+    if (tx.paymentTag) {
+      const pt = CATEGORIES.getPaymentTag(tx.paymentTag);
+      if (pt) {
+        payBadge = h('span', { style: { fontSize: '11px', backgroundColor: 'var(--color-bg-subtle)', padding: '1px 6px', borderRadius: 'var(--radius-pill)', marginLeft: '6px', flexShrink: 0 } }, pt.icon);
+      }
+    }
+
     return h('div', {
       key: tx.id,
       onClick: () => handleEdit(tx),
@@ -133,7 +142,8 @@ function PuffFinancePage() {
       h('div', { style: { flex: 1, minWidth: 0 } },
         h('div', { style: { fontSize: '17px', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center' } },
           h('span', null, cat.label),
-          badge
+          badge,
+          payBadge
         ),
         tx.notes && h('div', {
           style: { fontSize: '13px', color: 'var(--color-text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
