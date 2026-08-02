@@ -1,7 +1,7 @@
 (function() {
 /**
  * Personal Hub — 泡芙产品选择页面
- * 用于菜单的 Monthly Favorite / Weekly Selection 产品选择
+ * 用于菜单的 Monthly Features / Weekly Selection 产品选择
  * 支持搜索、分类筛选、两列 Grid 布局
  */
 
@@ -89,7 +89,7 @@ function ProductSelectPage() {
     { key: 'special',  label: 'Special' },
   ];
 
-  const title = type === 'monthly' ? '⭐ Monthly Favorite' : '📅 Weekly Selection';
+  const title = type === 'monthly' ? '⭐ Monthly Features' : '📅 Weekly Selection';
 
   // 产品卡片
   const renderProductCard = (product) => {

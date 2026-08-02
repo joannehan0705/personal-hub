@@ -140,7 +140,7 @@ function MenuPage() {
     const ids = isMonthly ? (menu.monthlyFavorites || []) : (menu.weeklySelection || []);
     const accentColor = isMonthly ? '#E8C547' : '#5B9E8E';
     const icon = isMonthly ? '⭐' : '📅';
-    const label = isMonthly ? 'Monthly Favorite' : 'Weekly Selection';
+    const label = isMonthly ? 'Monthly Features' : 'Weekly Selection';
 
     const displayIds = ids.slice(0, 3);
     const remaining = ids.length - displayIds.length;
@@ -392,7 +392,7 @@ function MenuPage() {
             fontSize: '13px', color: 'var(--color-text-tertiary)',
             textAlign: 'center', lineHeight: 1.5,
           }
-        }, '创建后点击 Monthly Favorite 或 Weekly Selection 选择产品'),
+        }, '创建后点击 Monthly Features 或 Weekly Selection 选择产品'),
       )
     )
   );

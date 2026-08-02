@@ -267,7 +267,7 @@ function OrdersReviewSection({ data, range }) {
         h('div', null, h('span', { style: { color: 'var(--color-text-tertiary)', fontSize: '12px' } }, 'Total Puffs'), h('div', { style: { fontSize: '18px', fontWeight: 700 }, className: 'numeric' }, productionSummary.totalPuffs)),
         productionSummary.classicCount > 0 && h('div', null, h('span', { style: { color: 'var(--color-text-tertiary)', fontSize: '12px' } }, 'Classic'), h('div', { style: { fontSize: '18px', fontWeight: 700 }, className: 'numeric' }, productionSummary.classicCount)),
         productionSummary.testingCount > 0 && h('div', null, h('span', { style: { color: 'var(--color-text-tertiary)', fontSize: '12px' } }, 'Testing'), h('div', { style: { fontSize: '18px', fontWeight: 700 }, className: 'numeric' }, productionSummary.testingCount)),
-        productionSummary.monthlyFavoriteCount > 0 && h('div', null, h('span', { style: { color: 'var(--color-text-tertiary)', fontSize: '12px' } }, 'Monthly Fav'), h('div', { style: { fontSize: '18px', fontWeight: 700 }, className: 'numeric' }, productionSummary.monthlyFavoriteCount)),
+        productionSummary.monthlyFavoriteCount > 0 && h('div', null, h('span', { style: { color: 'var(--color-text-tertiary)', fontSize: '12px' } }, 'Monthly Features'), h('div', { style: { fontSize: '18px', fontWeight: 700 }, className: 'numeric' }, productionSummary.monthlyFavoriteCount)),
         productionSummary.weeklySelectionCount > 0 && h('div', null, h('span', { style: { color: 'var(--color-text-tertiary)', fontSize: '12px' } }, 'Weekly Sel'), h('div', { style: { fontSize: '18px', fontWeight: 700 }, className: 'numeric' }, productionSummary.weeklySelectionCount)),
       ),
     ),
