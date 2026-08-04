@@ -838,6 +838,38 @@ class AllowanceDAO extends BaseDAO {
     return all.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
   }
 
+  // 获取可分配到某个目标的收入记录
+  // 只显示未分配给任何目标的收入，或已分配给当前目标的收入
+  async getAllocatableIncome(goalId = null) {
+    const all = await this.getAll();
+    return all
+      .filter(t => t.type === 'income')
+      .filter(t => {
+        if (!t.goalId) return true;           // 未分配 → 可用
+        if (t.goalId === goalId) return true; // 已分配给当前目标 → 可调整
+        return false;                          // 已分配给其他目标 → 隐藏
+      })
+      .map(t => {
+        const alreadyAllocated = (t.goalId === goalId) ? (t.allocationAmount || 0) : 0;
+        const remaining = t.amount - alreadyAllocated;
+        return { ...t, remainingAllocatable: Math.max(0, remaining), currentAllocation: alreadyAllocated };
+      })
+      .filter(t => t.remainingAllocatable > 0 || t.currentAllocation > 0)
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  }
+
+  // 将一笔收入分配到目标（替换当前目标的分配）
+  async allocateToGoal(recordId, goalId, amount) {
+    const record = await this.getById(recordId);
+    if (!record) return null;
+    return await this.update(recordId, { goalId, allocationAmount: amount });
+  }
+
+  // 取消单笔收入的分配
+  async unallocateRecord(recordId) {
+    return await this.update(recordId, { goalId: null, allocationAmount: null });
+  }
+
   async search(keyword) {
     const all = await this.getAll();
     const lower = keyword.toLowerCase();
@@ -894,6 +926,32 @@ class AllowanceGoalsDAO extends BaseDAO {
       }
     }
     return saved;
+  }
+
+  // 获取与目标相关的所有分配记录（收入分配 + 目标支出）
+  async getAllocationRecords(goalId) {
+    const allRecords = await DAO.allowance.getAll();
+    return allRecords.filter(t =>
+      (t.type === 'income' && t.goalId === goalId) ||
+      (t.type === 'expense' && t.expenseFromGoal === goalId)
+    ).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  }
+
+  // 取消目标的所有分配关联（用于安全删除目标）
+  async unallocateGoal(goalId) {
+    const allRecords = await DAO.allowance.getAll();
+    const related = allRecords.filter(t =>
+      (t.type === 'income' && t.goalId === goalId) ||
+      (t.type === 'expense' && t.expenseFromGoal === goalId)
+    );
+    for (const r of related) {
+      if (r.type === 'income') {
+        await DAO.allowance.update(r.id, { goalId: null, allocationAmount: null });
+      } else {
+        await DAO.allowance.update(r.id, { expenseFromGoal: null });
+      }
+    }
+    return related.length;
   }
 }
 

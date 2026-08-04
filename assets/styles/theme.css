@@ -349,6 +349,45 @@ body {
   100% { max-height: 0; opacity: 0; padding: 0; margin: 0; }
 }
 
+/* ===== Goal Completion Celebration ===== */
+@keyframes confettiFall {
+  0% { transform: translateY(-100vh) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg) scale(0.5); opacity: 0; }
+}
+
+@keyframes sparklePop {
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+  100% { transform: scale(0.8) rotate(360deg); opacity: 0; }
+}
+
+@keyframes celebrationFade {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.celebration-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+  animation: celebrationFade 3s ease-in-out forwards;
+}
+
+.celebration-emoji {
+  position: absolute;
+  font-size: 24px;
+  animation: confettiFall linear forwards;
+}
+
+.celebration-sparkle {
+  position: absolute;
+  font-size: 20px;
+  animation: sparklePop 0.8s ease-out forwards;
+}
+
 /* 无障碍：减少动画 */
 @media (prefers-reduced-motion: reduce) {
   * {

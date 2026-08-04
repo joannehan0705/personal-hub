@@ -40,6 +40,21 @@ function AllowancePage() {
   const [goalCreatedDate, setGoalCreatedDate] = useState('');
   const [goalCompletedDate, setGoalCompletedDate] = useState('');
 
+  // 视图模式：'main' | 'goalDetail' | 'allocation'
+  const [viewMode, setViewMode] = useState('main');
+  // 当前选中的目标（详情/分配视图使用）
+  const [selectedGoal, setSelectedGoal] = useState(null);
+  // 分配记录列表（详情视图）
+  const [allocationRecords, setAllocationRecords] = useState([]);
+  // 可分配收入列表（分配视图）
+  const [allocatableIncome, setAllocatableIncome] = useState([]);
+  // 每条收入的分配输入 { [recordId]: string }
+  const [allocationInputs, setAllocationInputs] = useState({});
+  // 完成庆祝动画
+  const [showCelebration, setShowCelebration] = useState(false);
+  // 创建目标后的分配提示
+  const [newlyCreatedGoal, setNewlyCreatedGoal] = useState(null);
+
   const isCurrentMonth = allowanceMonth === DateUtils.currentMonth();
 
   useEffect(() => {
@@ -233,6 +248,10 @@ function AllowancePage() {
         completedAt: new Date().toISOString(),
       });
       showToast(`🎉 储蓄目标「${goal.name}」已达标！`, 'success');
+      // 触发庆祝动画
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 3000);
+      Haptics.success();
     }
   };
 
@@ -291,20 +310,101 @@ function AllowancePage() {
     if (editingGoal) {
       await DAO.allowanceGoals.update(editingGoal.id, data);
       showToast('目标已更新', 'success');
+      Haptics.success();
+      handleCloseForm();
     } else {
-      await DAO.allowanceGoals.create(data);
+      const created = await DAO.allowanceGoals.create(data);
       showToast('目标已创建', 'success');
+      Haptics.success();
+      handleCloseForm();
+      // 创建后检查是否有可分配收入，提示用户
+      const allocatable = await DAO.allowance.getAllocatableIncome(created.id);
+      if (allocatable.length > 0) {
+        setTimeout(() => {
+          setNewlyCreatedGoal(created);
+        }, 300);
+      }
     }
-    Haptics.success();
-    handleCloseForm();
   };
 
   const handleDeleteGoal = async (goal) => {
-    if (!confirm(`确定删除「${goal.name}」？`)) return;
+    if (!confirm(`确定删除「${goal.name}」？\n关联的收入分配和支出记录将被取消关联，资金将回到可用余额。`)) return;
+    // Step 1: 取消所有关联记录的分配
+    const unallocatedCount = await DAO.allowanceGoals.unallocateGoal(goal.id);
+    // Step 2: 删除目标
     await DAO.allowanceGoals.delete(goal.id);
-    showToast('已删除', 'success');
+    // Step 3: 如果正在查看该目标详情，返回主视图
+    if (selectedGoal && selectedGoal.id === goal.id) {
+      setViewMode('main');
+      setSelectedGoal(null);
+    }
+    showToast(`已删除，${unallocatedCount} 条记录已取消关联`, 'success');
     Haptics.success();
     refreshData();
+  };
+
+  // ===== 目标详情 / 分配视图导航 =====
+  const openGoalDetail = async (goal) => {
+    setSelectedGoal(goal);
+    setViewMode('goalDetail');
+    const records = await DAO.allowanceGoals.getAllocationRecords(goal.id);
+    setAllocationRecords(records);
+  };
+
+  const openAllocationView = async (goal) => {
+    setSelectedGoal(goal);
+    setViewMode('allocation');
+    setAllocationInputs({});
+    const income = await DAO.allowance.getAllocatableIncome(goal.id);
+    setAllocatableIncome(income);
+  };
+
+  const handleBackToMain = () => {
+    setViewMode('main');
+    setSelectedGoal(null);
+    setAllocationRecords([]);
+    setAllocatableIncome([]);
+    setAllocationInputs({});
+    refreshData();
+  };
+
+  const handleAllocateIncome = async (recordId, goalId, amountStr) => {
+    const amt = parseFloat(amountStr);
+    if (!amt || amt <= 0) {
+      showToast('请输入有效金额', 'warning');
+      return;
+    }
+    const record = allocatableIncome.find(r => r.id === recordId);
+    if (amt > record.remainingAllocatable) {
+      showToast('分配金额不能超过可分配余额', 'warning');
+      return;
+    }
+    await DAO.allowance.allocateToGoal(recordId, goalId, amt);
+    Haptics.success();
+    showToast('已分配', 'success');
+    // 刷新可分配收入列表
+    const income = await DAO.allowance.getAllocatableIncome(goalId);
+    setAllocatableIncome(income);
+    setAllocationInputs({});
+    // 检查目标是否达标
+    await checkAndAutoCompleteGoal(goalId, DateUtils.today());
+    // 刷新当前目标的进度
+    const updatedGoal = await DAO.allowanceGoals.getById(goalId);
+    const saved = await DAO.allowanceGoals.getGoalProgress(goalId);
+    setSelectedGoal({ ...updatedGoal, saved });
+  };
+
+  const handleUnallocateRecord = async (recordId, goalId) => {
+    await DAO.allowance.unallocateRecord(recordId);
+    Haptics.light();
+    showToast('已取消分配', 'success');
+    // 刷新分配记录
+    const records = await DAO.allowanceGoals.getAllocationRecords(goalId);
+    setAllocationRecords(records);
+    // 刷新目标进度
+    const updatedGoal = await DAO.allowanceGoals.getById(goalId);
+    const saved = await DAO.allowanceGoals.getGoalProgress(goalId);
+    setSelectedGoal({ ...updatedGoal, saved });
   };
 
   // ===== 辅助函数 =====
@@ -374,10 +474,11 @@ function AllowancePage() {
       cancelled: { label: '已取消', color: 'var(--color-text-tertiary)' },
     };
     const statusInfo = statusLabels[goal.status] || statusLabels.in_progress;
+    const isCompleted = goal.status === 'completed';
 
     return h('div', {
       key: goal.id,
-      onClick: () => { Haptics.light(); openGoalForm(goal); },
+      onClick: () => { Haptics.light(); openGoalDetail(goal); },
       style: {
         backgroundColor: 'var(--color-bg-card)',
         borderRadius: 'var(--radius-md)',
@@ -387,6 +488,7 @@ function AllowancePage() {
         cursor: 'pointer',
       }
     },
+      // 头部：名称 + 状态标签 + 编辑/删除按钮
       h('div', {
         style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }
       },
@@ -401,14 +503,24 @@ function AllowancePage() {
             }
           }, statusInfo.label)
         ),
-        h('button', {
-          onClick: (e) => { e.stopPropagation(); handleDeleteGoal(goal); },
-          style: {
-            width: '24px', height: '24px', borderRadius: '50%',
-            backgroundColor: 'var(--color-bg-subtle)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }
-        }, h(Icon, { name: 'trash', size: 12, color: 'var(--color-text-tertiary)' }))
+        h('div', { style: { display: 'flex', gap: '4px' } },
+          h('button', {
+            onClick: (e) => { e.stopPropagation(); openGoalForm(goal); },
+            style: {
+              width: '24px', height: '24px', borderRadius: '50%',
+              backgroundColor: 'var(--color-bg-subtle)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }
+          }, h(Icon, { name: 'edit', size: 12, color: 'var(--color-text-tertiary)' })),
+          h('button', {
+            onClick: (e) => { e.stopPropagation(); handleDeleteGoal(goal); },
+            style: {
+              width: '24px', height: '24px', borderRadius: '50%',
+              backgroundColor: 'var(--color-bg-subtle)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }
+          }, h(Icon, { name: 'trash', size: 12, color: 'var(--color-text-tertiary)' }))
+        )
       ),
       // 进度条
       h('div', {
@@ -430,17 +542,40 @@ function AllowancePage() {
           }
         })
       ),
+      // 统计行
       h('div', {
         style: {
           display: 'flex',
           justifyContent: 'space-between',
           fontSize: '13px',
           color: 'var(--color-text-tertiary)',
+          marginBottom: '8px',
         }
       },
         h('span', { className: 'numeric' }, '已存 ' + FormatUtils.money(saved)),
         h('span', null, percent + '%'),
         h('span', { className: 'numeric' }, '剩余 ' + FormatUtils.money(remaining))
+      ),
+      // 操作按钮（韩式简约：subtle pill buttons）
+      h('div', { style: { display: 'flex', gap: 'var(--space-sm)' } },
+        !isCompleted && h('button', {
+          onClick: (e) => { e.stopPropagation(); Haptics.light(); openAllocationView(goal); },
+          style: {
+            flex: 1, padding: '8px', borderRadius: 'var(--radius-sm)',
+            fontSize: '13px', fontWeight: 500,
+            backgroundColor: 'var(--color-accent-light)',
+            color: 'var(--color-accent)',
+          }
+        }, '💰 分配'),
+        h('button', {
+          onClick: (e) => { e.stopPropagation(); Haptics.light(); openGoalDetail(goal); },
+          style: {
+            flex: 1, padding: '8px', borderRadius: 'var(--radius-sm)',
+            fontSize: '13px', fontWeight: 500,
+            backgroundColor: 'var(--color-bg-subtle)',
+            color: 'var(--color-text-secondary)',
+          }
+        }, '查看详情')
       )
     );
   };
@@ -499,7 +634,329 @@ function AllowancePage() {
     );
   };
 
-  return h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
+  // ===== 庆祝动画 =====
+  const renderCelebration = () => {
+    if (!showCelebration) return null;
+    const emojis = ['🎉', '🎊', '✨', '⭐', '🌟', '💫'];
+    const pieces = Array.from({ length: 18 }, (_, i) => {
+      const left = Math.random() * 100;
+      const delay = Math.random() * 0.5;
+      const duration = 2 + Math.random() * 1;
+      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+      const isSparkle = i % 3 === 0;
+      return h('span', {
+        key: i,
+        className: isSparkle ? 'celebration-sparkle' : 'celebration-emoji',
+        style: {
+          left: left + '%',
+          top: isSparkle ? (20 + Math.random() * 60) + '%' : '-5%',
+          animationDelay: delay + 's',
+          animationDuration: duration + 's',
+        }
+      }, emoji);
+    });
+    return h('div', { className: 'celebration-overlay' }, pieces);
+  };
+
+  // ===== 创建后提示 =====
+  const renderPostCreationPrompt = () => h(ConfirmDialog, {
+    open: !!newlyCreatedGoal,
+    title: '分配收入',
+    message: '是否现在将已有收入分配到这个目标？',
+    confirmText: '去分配',
+    cancelText: '稍后',
+    onConfirm: () => {
+      const goal = newlyCreatedGoal;
+      setNewlyCreatedGoal(null);
+      openAllocationView(goal);
+    },
+    onCancel: () => setNewlyCreatedGoal(null),
+  });
+
+  // ===== 目标详情视图 =====
+  const renderGoalDetail = () => {
+    if (!selectedGoal) return null;
+    const saved = selectedGoal.saved || 0;
+    const target = selectedGoal.target || 0;
+    const percent = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
+    const remaining = Math.max(0, target - saved);
+    const isCompleted = selectedGoal.status === 'completed';
+
+    return h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
+      h(NavBar, {
+        title: selectedGoal.name,
+        showBack: true,
+        onBack: handleBackToMain,
+        rightAction: h('button', {
+          onClick: () => { Haptics.light(); openGoalForm(selectedGoal); },
+          style: { width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+        }, h(Icon, { name: 'edit', size: 18, color: 'var(--color-accent)' }))
+      }),
+
+      h('div', { className: 'scroll-container page' },
+        // 目标概览卡片
+        h('div', {
+          style: {
+            backgroundColor: 'var(--color-bg-card)',
+            borderRadius: 'var(--radius-lg)',
+            padding: 'var(--space-lg)',
+            boxShadow: 'var(--shadow-1)',
+            marginBottom: 'var(--space-md)',
+            textAlign: 'center',
+          }
+        },
+          h('div', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)', marginBottom: '4px' } }, '目标金额'),
+          h('div', {
+            style: { fontSize: '32px', fontWeight: 700, color: 'var(--color-accent)', marginBottom: 'var(--space-md)' },
+            className: 'numeric'
+          }, FormatUtils.money(target)),
+          // 进度条
+          h('div', {
+            style: {
+              height: '10px',
+              backgroundColor: 'var(--color-bg-subtle)',
+              borderRadius: 'var(--radius-pill)',
+              overflow: 'hidden',
+              marginBottom: '8px',
+            }
+          },
+            h('div', {
+              style: {
+                height: '100%', width: percent + '%',
+                backgroundColor: percent >= 100 ? 'var(--color-complete)' : 'var(--color-accent)',
+                borderRadius: 'var(--radius-pill)',
+                transition: 'width 0.3s',
+              }
+            })
+          ),
+          h('div', {
+            style: { display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--color-text-tertiary)' }
+          },
+            h('span', { className: 'numeric' }, '已存 ' + FormatUtils.money(saved)),
+            h('span', null, percent + '%'),
+            h('span', { className: 'numeric' }, '剩余 ' + FormatUtils.money(remaining))
+          )
+        ),
+
+        // 元数据
+        h('div', {
+          style: {
+            backgroundColor: 'var(--color-bg-card)',
+            borderRadius: 'var(--radius-md)',
+            padding: 'var(--space-md)',
+            boxShadow: 'var(--shadow-1)',
+            marginBottom: 'var(--space-md)',
+          }
+        },
+          h('div', { style: { display: 'flex', justifyContent: 'space-between', padding: '4px 0' } },
+            h('span', { style: { fontSize: '14px', color: 'var(--color-text-tertiary)' } }, '创建日期'),
+            h('span', { style: { fontSize: '14px', color: 'var(--color-text-primary)' } },
+              DateUtils.friendlyDate(selectedGoal.createdDate || (selectedGoal.createdAt || '').slice(0, 10)))
+          ),
+          selectedGoal.completedDate && h('div', { style: { display: 'flex', justifyContent: 'space-between', padding: '4px 0' } },
+            h('span', { style: { fontSize: '14px', color: 'var(--color-text-tertiary)' } }, '完成日期'),
+            h('span', { style: { fontSize: '14px', color: 'var(--color-complete)' } },
+              DateUtils.friendlyDate(selectedGoal.completedDate))
+          ),
+        ),
+
+        // 分配记录
+        h('div', {
+          style: { fontSize: '16px', fontWeight: 600, color: 'var(--color-text-primary)', padding: '0 var(--space-xs) var(--space-sm)' }
+        }, '📋 分配记录'),
+        allocationRecords.length === 0
+          ? h('div', {
+              style: { textAlign: 'center', padding: 'var(--space-lg) 0', color: 'var(--color-text-tertiary)', fontSize: '14px' }
+            }, '还没有分配记录')
+          : h('div', {
+              style: {
+                backgroundColor: 'var(--color-bg-card)',
+                borderRadius: 'var(--radius-md)',
+                padding: '0 var(--space-md)',
+                boxShadow: 'var(--shadow-1)',
+              }
+            }, allocationRecords.map(r => {
+              const cat = getCategoryInfo(r.type, r.category);
+              const isIncome = r.type === 'income';
+              const displayAmount = isIncome
+                ? (r.allocationAmount != null ? r.allocationAmount : r.amount)
+                : r.amount;
+              return h('div', {
+                key: r.id,
+                style: {
+                  display: 'flex', alignItems: 'center', gap: 'var(--space-md)',
+                  padding: '10px 0', borderBottom: '1px solid var(--color-border-light)',
+                }
+              },
+                h('div', {
+                  style: {
+                    width: '36px', height: '36px', borderRadius: 'var(--radius-sm)',
+                    backgroundColor: 'var(--color-bg-subtle)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '18px', flexShrink: 0,
+                  }
+                }, cat.icon),
+                h('div', {
+                  style: { flex: 1, minWidth: 0, cursor: 'pointer' },
+                  onClick: () => { Haptics.light(); openTransactionForm(r.type, r); },
+                },
+                  h('div', {
+                    style: { fontSize: '15px', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+                  }, r.notes || cat.label),
+                  h('div', {
+                    style: { fontSize: '12px', color: 'var(--color-text-tertiary)' }
+                  }, DateUtils.friendlyDate(r.date), ' · ', isIncome ? '收入分配' : '目标支出')
+                ),
+                h('span', {
+                  style: {
+                    fontSize: '16px', fontWeight: 600,
+                    color: isIncome ? 'var(--color-complete)' : 'var(--color-deadline)',
+                  },
+                  className: 'numeric'
+                }, (isIncome ? '+' : '-') + FormatUtils.money(displayAmount)),
+                // 取消分配按钮（仅收入分配 + 进行中目标）
+                isIncome && selectedGoal.status === 'in_progress' && h('button', {
+                  onClick: (e) => { e.stopPropagation(); handleUnallocateRecord(r.id, selectedGoal.id); },
+                  style: {
+                    width: '24px', height: '24px', borderRadius: '50%',
+                    backgroundColor: 'var(--color-bg-subtle)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }
+                }, h(Icon, { name: 'close', size: 12, color: 'var(--color-text-tertiary)' }))
+              );
+            }))
+      ),
+
+      // 底部操作栏
+      !isCompleted && h('div', { className: 'action-bar' },
+        h(Button, {
+          variant: 'primary', size: 'compact', fullWidth: true,
+          onClick: () => { Haptics.light(); openAllocationView(selectedGoal); }
+        }, '💰 分配收入到目标')
+      )
+    );
+  };
+
+  // ===== 分配视图 =====
+  const renderAllocation = () => {
+    if (!selectedGoal) return null;
+    const saved = selectedGoal.saved || 0;
+    const target = selectedGoal.target || 0;
+    const percent = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
+    const remaining = Math.max(0, target - saved);
+
+    return h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
+      h(NavBar, {
+        title: `分配到「${selectedGoal.name}」`,
+        showBack: true,
+        onBack: () => { openGoalDetail(selectedGoal); },
+      }),
+
+      h('div', { className: 'scroll-container page' },
+        // 目标进度概览
+        h('div', {
+          style: {
+            backgroundColor: 'var(--color-bg-card)',
+            borderRadius: 'var(--radius-lg)',
+            padding: 'var(--space-lg)',
+            boxShadow: 'var(--shadow-1)',
+            marginBottom: 'var(--space-md)',
+            textAlign: 'center',
+          }
+        },
+          h('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px' } },
+            h('span', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '已存'),
+            h('span', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '剩余'),
+          ),
+          h('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px' } },
+            h('span', { style: { fontSize: '20px', fontWeight: 700, color: 'var(--color-accent)' }, className: 'numeric' }, FormatUtils.money(saved)),
+            h('span', { style: { fontSize: '20px', fontWeight: 700, color: 'var(--color-text-secondary)' }, className: 'numeric' }, FormatUtils.money(remaining)),
+          ),
+          h('div', {
+            style: { height: '8px', backgroundColor: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-pill)', overflow: 'hidden' }
+          },
+            h('div', {
+              style: {
+                height: '100%', width: percent + '%',
+                backgroundColor: 'var(--color-accent)', borderRadius: 'var(--radius-pill)',
+                transition: 'width 0.3s',
+              }
+            })
+          )
+        ),
+
+        // 可分配收入列表
+        h('div', {
+          style: { fontSize: '16px', fontWeight: 600, color: 'var(--color-text-primary)', padding: '0 var(--space-xs) var(--space-sm)' }
+        }, '可选择分配的收入'),
+        allocatableIncome.length === 0
+          ? h(EmptyState, { icon: '💰', title: '没有可分配的收入', subtitle: '所有收入已分配或暂无收入记录' })
+          : h('div', null, allocatableIncome.map(r => {
+              const cat = getCategoryInfo('income', r.category);
+              const inputVal = allocationInputs[r.id] || '';
+              return h('div', {
+                key: r.id,
+                style: {
+                  backgroundColor: 'var(--color-bg-card)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: 'var(--space-md)',
+                  marginBottom: 'var(--space-sm)',
+                  boxShadow: 'var(--shadow-1)',
+                }
+              },
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: '8px' } },
+                  h('div', {
+                    style: {
+                      width: '32px', height: '32px', borderRadius: 'var(--radius-sm)',
+                      backgroundColor: 'var(--color-bg-subtle)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '16px', flexShrink: 0,
+                    }
+                  }, cat.icon),
+                  h('div', { style: { flex: 1, minWidth: 0 } },
+                    h('div', { style: { fontSize: '15px', color: 'var(--color-text-primary)' } }, r.notes || cat.label),
+                    h('div', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)' } },
+                      DateUtils.friendlyDate(r.date), ' · 收入 ', FormatUtils.money(r.amount)),
+                  ),
+                  h('div', { style: { textAlign: 'right' } },
+                    h('div', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)' } }, '可分配'),
+                    h('div', { style: { fontSize: '15px', fontWeight: 600, color: 'var(--color-complete)' }, className: 'numeric' }, FormatUtils.money(r.remainingAllocatable)),
+                  )
+                ),
+                // 分配输入 + 按钮
+                h('div', { style: { display: 'flex', gap: 'var(--space-sm)' } },
+                  h('input', {
+                    type: 'number',
+                    value: inputVal,
+                    onChange: (e) => setAllocationInputs(prev => ({ ...prev, [r.id]: e.target.value })),
+                    placeholder: '分配金额',
+                    style: {
+                      flex: 1,
+                      backgroundColor: 'var(--color-bg-subtle)',
+                      border: '2px solid transparent',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 14px',
+                      fontSize: '16px',
+                      color: 'var(--color-text-primary)',
+                      outline: 'none',
+                      minWidth: 0,
+                    }
+                  }),
+                  h(Button, {
+                    variant: 'primary', size: 'compact',
+                    onClick: () => handleAllocateIncome(r.id, selectedGoal.id, inputVal),
+                    style: { flexShrink: 0 }
+                  }, '分配')
+                )
+              );
+            }))
+      )
+    );
+  };
+
+  // ===== 主视图 =====
+  const renderMainView = () => h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
 
     h(NavBar, {
       title: '零用钱', showBack: false,
@@ -548,8 +1005,20 @@ function AllowancePage() {
       ),
       goals.length === 0
         ? h('div', {
-            style: { textAlign: 'center', padding: 'var(--space-lg) 0', color: 'var(--color-text-tertiary)', fontSize: '14px' }
-          }, '还没有储蓄目标，点击 + 创建')
+            style: {
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              padding: 'var(--space-4xl) 0', textAlign: 'center',
+            }
+          },
+            h('div', { style: { fontSize: '48px', marginBottom: 'var(--space-md)', opacity: 0.4 } }, '🎯'),
+            h('div', {
+              style: { fontSize: '15px', color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-lg)' }
+            }, '还没有储蓄目标'),
+            h(Button, {
+              variant: 'secondary', size: 'sm',
+              onClick: () => { Haptics.light(); openGoalForm(null); },
+            }, '+ 创建目标')
+          )
         : h('div', null, goals.map(renderGoal)),
 
       // 记录列表
@@ -797,6 +1266,18 @@ function AllowancePage() {
             h(Button, { fullWidth: true, onClick: handleSaveGoal }, editingGoal ? '保存' : '创建目标'),
           )
     )
+  );
+
+  return h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
+    renderCelebration(),
+    renderPostCreationPrompt(),
+    viewMode === 'main'
+      ? renderMainView()
+      : viewMode === 'goalDetail'
+      ? renderGoalDetail()
+      : viewMode === 'allocation'
+      ? renderAllocation()
+      : null
   );
 }
 
