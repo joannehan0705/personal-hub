@@ -693,7 +693,7 @@ function AllowancePage() {
         }, h(Icon, { name: 'edit', size: 18, color: 'var(--color-accent)' }))
       }),
 
-      h('div', { className: 'scroll-container page' },
+      h('div', { className: 'scroll-container page-with-action-bar' },
         // 目标概览卡片
         h('div', {
           style: {
@@ -853,7 +853,7 @@ function AllowancePage() {
         onBack: () => { openGoalDetail(selectedGoal); },
       }),
 
-      h('div', { className: 'scroll-container page' },
+      h('div', { className: 'scroll-container page-with-action-bar' },
         // 目标进度概览
         h('div', {
           style: {
@@ -986,7 +986,7 @@ function AllowancePage() {
       }, h(Icon, { name: 'chevronRight', size: 22, color: 'var(--color-text-secondary)' }))
     ),
 
-    h('div', { className: 'scroll-container page' },
+    h('div', { className: 'scroll-container page-with-action-bar' },
       // 统计概览
       renderSummary(),
 
@@ -1268,7 +1268,7 @@ function AllowancePage() {
     )
   );
 
-  return h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
+  return h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' } },
     renderCelebration(),
     renderPostCreationPrompt(),
     viewMode === 'main'
