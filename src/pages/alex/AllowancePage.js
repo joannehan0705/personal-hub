@@ -682,7 +682,7 @@ function AllowancePage() {
     const remaining = Math.max(0, target - saved);
     const isCompleted = selectedGoal.status === 'completed';
 
-    return h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
+    return h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' } },
       h(NavBar, {
         title: selectedGoal.name,
         showBack: true,
@@ -846,7 +846,7 @@ function AllowancePage() {
     const percent = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
     const remaining = Math.max(0, target - saved);
 
-    return h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
+    return h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' } },
       h(NavBar, {
         title: `分配到「${selectedGoal.name}」`,
         showBack: true,
@@ -956,7 +956,7 @@ function AllowancePage() {
   };
 
   // ===== 主视图 =====
-  const renderMainView = () => h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
+  const renderMainView = () => h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' } },
 
     h(NavBar, {
       title: '零用钱', showBack: false,
