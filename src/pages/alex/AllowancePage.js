@@ -46,10 +46,12 @@ function AllowancePage() {
   const [selectedGoal, setSelectedGoal] = useState(null);
   // 分配记录列表（详情视图）
   const [allocationRecords, setAllocationRecords] = useState([]);
-  // 可分配收入列表（分配视图）
+  // 可分配收入列表（分配Sheet）
   const [allocatableIncome, setAllocatableIncome] = useState([]);
   // 每条收入的分配输入 { [recordId]: string }
   const [allocationInputs, setAllocationInputs] = useState({});
+  // 分配Sheet是否打开
+  const [showAllocationSheet, setShowAllocationSheet] = useState(false);
   // 完成庆祝动画
   const [showCelebration, setShowCelebration] = useState(false);
   // 创建目标后的分配提示
@@ -353,10 +355,16 @@ function AllowancePage() {
 
   const openAllocationView = async (goal) => {
     setSelectedGoal(goal);
-    setViewMode('allocation');
     setAllocationInputs({});
     const income = await DAO.allowance.getAllocatableIncome(goal.id);
     setAllocatableIncome(income);
+    setShowAllocationSheet(true);
+  };
+
+  const handleCloseAllocationSheet = () => {
+    setShowAllocationSheet(false);
+    setAllocatableIncome([]);
+    setAllocationInputs({});
   };
 
   const handleBackToMain = () => {
@@ -392,6 +400,11 @@ function AllowancePage() {
     const updatedGoal = await DAO.allowanceGoals.getById(goalId);
     const saved = await DAO.allowanceGoals.getGoalProgress(goalId);
     setSelectedGoal({ ...updatedGoal, saved });
+    // 如果在详情页，刷新分配记录
+    if (viewMode === 'goalDetail') {
+      const records = await DAO.allowanceGoals.getAllocationRecords(goalId);
+      setAllocationRecords(records);
+    }
   };
 
   const handleUnallocateRecord = async (recordId, goalId) => {
@@ -549,33 +562,11 @@ function AllowancePage() {
           justifyContent: 'space-between',
           fontSize: '13px',
           color: 'var(--color-text-tertiary)',
-          marginBottom: '8px',
         }
       },
         h('span', { className: 'numeric' }, '已存 ' + FormatUtils.money(saved)),
         h('span', null, percent + '%'),
         h('span', { className: 'numeric' }, '剩余 ' + FormatUtils.money(remaining))
-      ),
-      // 操作按钮（韩式简约：subtle pill buttons）
-      h('div', { style: { display: 'flex', gap: 'var(--space-sm)' } },
-        !isCompleted && h('button', {
-          onClick: (e) => { e.stopPropagation(); Haptics.light(); openAllocationView(goal); },
-          style: {
-            flex: 1, padding: '8px', borderRadius: 'var(--radius-sm)',
-            fontSize: '13px', fontWeight: 500,
-            backgroundColor: 'var(--color-accent-light)',
-            color: 'var(--color-accent)',
-          }
-        }, '💰 分配'),
-        h('button', {
-          onClick: (e) => { e.stopPropagation(); Haptics.light(); openGoalDetail(goal); },
-          style: {
-            flex: 1, padding: '8px', borderRadius: 'var(--radius-sm)',
-            fontSize: '13px', fontWeight: 500,
-            backgroundColor: 'var(--color-bg-subtle)',
-            color: 'var(--color-text-secondary)',
-          }
-        }, '查看详情')
       )
     );
   };
@@ -839,119 +830,106 @@ function AllowancePage() {
   };
 
   // ===== 分配视图 =====
-  const renderAllocation = () => {
+  const renderAllocationSheet = () => {
     if (!selectedGoal) return null;
     const saved = selectedGoal.saved || 0;
     const target = selectedGoal.target || 0;
     const percent = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
     const remaining = Math.max(0, target - saved);
 
-    return h(React.Fragment, null,
-      h(NavBar, {
-        title: `分配到「${selectedGoal.name}」`,
-        showBack: true,
-        onBack: () => { openGoalDetail(selectedGoal); },
-      }),
-
-      h('div', { className: 'scroll-container page-with-action-bar' },
-        // 目标进度概览
-        h('div', {
-          style: {
-            backgroundColor: 'var(--color-bg-card)',
-            borderRadius: 'var(--radius-lg)',
-            padding: 'var(--space-lg)',
-            boxShadow: 'var(--shadow-1)',
-            marginBottom: 'var(--space-md)',
-            textAlign: 'center',
-          }
-        },
-          h('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px' } },
-            h('span', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '已存'),
-            h('span', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '剩余'),
-          ),
-          h('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px' } },
-            h('span', { style: { fontSize: '20px', fontWeight: 700, color: 'var(--color-accent)' }, className: 'numeric' }, FormatUtils.money(saved)),
-            h('span', { style: { fontSize: '20px', fontWeight: 700, color: 'var(--color-text-secondary)' }, className: 'numeric' }, FormatUtils.money(remaining)),
-          ),
-          h('div', {
-            style: { height: '8px', backgroundColor: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-pill)', overflow: 'hidden' }
-          },
-            h('div', {
-              style: {
-                height: '100%', width: percent + '%',
-                backgroundColor: 'var(--color-accent)', borderRadius: 'var(--radius-pill)',
-                transition: 'width 0.3s',
-              }
-            })
-          )
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' } },
+      // 目标进度概览
+      h('div', {
+        style: {
+          backgroundColor: 'var(--color-bg-subtle)',
+          borderRadius: 'var(--radius-md)',
+          padding: 'var(--space-md)',
+          textAlign: 'center',
+        }
+      },
+        h('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '6px' } },
+          h('span', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '已存'),
+          h('span', { style: { fontSize: '13px', color: 'var(--color-text-tertiary)' } }, '剩余'),
         ),
-
-        // 可分配收入列表
+        h('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '8px' } },
+          h('span', { style: { fontSize: '20px', fontWeight: 700, color: 'var(--color-accent)' }, className: 'numeric' }, FormatUtils.money(saved)),
+          h('span', { style: { fontSize: '20px', fontWeight: 700, color: 'var(--color-text-secondary)' }, className: 'numeric' }, FormatUtils.money(remaining)),
+        ),
         h('div', {
-          style: { fontSize: '16px', fontWeight: 600, color: 'var(--color-text-primary)', padding: '0 var(--space-xs) var(--space-sm)' }
-        }, '可选择分配的收入'),
-        allocatableIncome.length === 0
-          ? h(EmptyState, { icon: '💰', title: '没有可分配的收入', subtitle: '所有收入已分配或暂无收入记录' })
-          : h('div', null, allocatableIncome.map(r => {
-              const cat = getCategoryInfo('income', r.category);
-              const inputVal = allocationInputs[r.id] || '';
-              return h('div', {
-                key: r.id,
-                style: {
-                  backgroundColor: 'var(--color-bg-card)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: 'var(--space-md)',
-                  marginBottom: 'var(--space-sm)',
-                  boxShadow: 'var(--shadow-1)',
-                }
-              },
-                h('div', { style: { display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: '8px' } },
-                  h('div', {
-                    style: {
-                      width: '32px', height: '32px', borderRadius: 'var(--radius-sm)',
-                      backgroundColor: 'var(--color-bg-subtle)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '16px', flexShrink: 0,
-                    }
-                  }, cat.icon),
-                  h('div', { style: { flex: 1, minWidth: 0 } },
-                    h('div', { style: { fontSize: '15px', color: 'var(--color-text-primary)' } }, r.notes || cat.label),
-                    h('div', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)' } },
-                      DateUtils.friendlyDate(r.date), ' · 收入 ', FormatUtils.money(r.amount)),
-                  ),
-                  h('div', { style: { textAlign: 'right' } },
-                    h('div', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)' } }, '可分配'),
-                    h('div', { style: { fontSize: '15px', fontWeight: 600, color: 'var(--color-complete)' }, className: 'numeric' }, FormatUtils.money(r.remainingAllocatable)),
-                  )
+          style: { height: '8px', backgroundColor: 'var(--color-bg-card)', borderRadius: 'var(--radius-pill)', overflow: 'hidden' }
+        },
+          h('div', {
+            style: {
+              height: '100%', width: percent + '%',
+              backgroundColor: 'var(--color-accent)', borderRadius: 'var(--radius-pill)',
+              transition: 'width 0.3s',
+            }
+          })
+        )
+      ),
+
+      // 可分配收入列表
+      allocatableIncome.length === 0
+        ? h(EmptyState, { icon: '💰', title: '没有可分配的收入', subtitle: '所有收入已分配或暂无收入记录' })
+        : h('div', null, allocatableIncome.map(r => {
+            const cat = getCategoryInfo('income', r.category);
+            const inputVal = allocationInputs[r.id] || '';
+            return h('div', {
+              key: r.id,
+              style: {
+                backgroundColor: 'var(--color-bg-card)',
+                borderRadius: 'var(--radius-md)',
+                padding: 'var(--space-md)',
+                marginBottom: 'var(--space-sm)',
+                boxShadow: 'var(--shadow-1)',
+              }
+            },
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: '8px' } },
+                h('div', {
+                  style: {
+                    width: '32px', height: '32px', borderRadius: 'var(--radius-sm)',
+                    backgroundColor: 'var(--color-bg-subtle)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '16px', flexShrink: 0,
+                  }
+                }, cat.icon),
+                h('div', { style: { flex: 1, minWidth: 0 } },
+                  h('div', { style: { fontSize: '15px', color: 'var(--color-text-primary)' } }, r.notes || cat.label),
+                  h('div', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)' } },
+                    DateUtils.friendlyDate(r.date), ' · 收入 ', FormatUtils.money(r.amount)),
                 ),
-                // 分配输入 + 按钮
-                h('div', { style: { display: 'flex', gap: 'var(--space-sm)' } },
-                  h('input', {
-                    type: 'number',
-                    value: inputVal,
-                    onChange: (e) => setAllocationInputs(prev => ({ ...prev, [r.id]: e.target.value })),
-                    placeholder: '分配金额',
-                    style: {
-                      flex: 1,
-                      backgroundColor: 'var(--color-bg-subtle)',
-                      border: '2px solid transparent',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '10px 14px',
-                      fontSize: '16px',
-                      color: 'var(--color-text-primary)',
-                      outline: 'none',
-                      minWidth: 0,
-                    }
-                  }),
-                  h(Button, {
-                    variant: 'primary', size: 'compact',
-                    onClick: () => handleAllocateIncome(r.id, selectedGoal.id, inputVal),
-                    style: { flexShrink: 0 }
-                  }, '分配')
+                h('div', { style: { textAlign: 'right' } },
+                  h('div', { style: { fontSize: '12px', color: 'var(--color-text-tertiary)' } }, '可分配'),
+                  h('div', { style: { fontSize: '15px', fontWeight: 600, color: 'var(--color-complete)' }, className: 'numeric' }, FormatUtils.money(r.remainingAllocatable)),
                 )
-              );
-            }))
-      )
+              ),
+              // 分配输入 + 按钮
+              h('div', { style: { display: 'flex', gap: 'var(--space-sm)' } },
+                h('input', {
+                  type: 'number',
+                  value: inputVal,
+                  onChange: (e) => setAllocationInputs(prev => ({ ...prev, [r.id]: e.target.value })),
+                  placeholder: '分配金额',
+                  style: {
+                    flex: 1,
+                    backgroundColor: 'var(--color-bg-subtle)',
+                    border: '2px solid transparent',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '10px 14px',
+                    fontSize: '16px',
+                    color: 'var(--color-text-primary)',
+                    outline: 'none',
+                    minWidth: 0,
+                  }
+                }),
+                h(Button, {
+                  variant: 'primary', size: 'compact',
+                  onClick: () => handleAllocateIncome(r.id, selectedGoal.id, inputVal),
+                  style: { flexShrink: 0 }
+                }, '分配')
+              )
+            );
+          }))
     );
   };
 
@@ -1275,9 +1253,14 @@ function AllowancePage() {
       ? renderMainView()
       : viewMode === 'goalDetail'
       ? renderGoalDetail()
-      : viewMode === 'allocation'
-      ? renderAllocation()
-      : null
+      : null,
+
+    // 分配 Sheet（弹出式）
+    h(Sheet, {
+      open: showAllocationSheet,
+      onClose: handleCloseAllocationSheet,
+      title: selectedGoal ? `分配到「${selectedGoal.name}」` : '',
+    }, renderAllocationSheet())
   );
 }
 
