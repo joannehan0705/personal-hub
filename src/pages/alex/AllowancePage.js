@@ -1268,7 +1268,7 @@ function AllowancePage() {
     )
   );
 
-  return h('div', { style: { display: 'flex', flexDirection: 'column', height: '100%' } },
+  return h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 } },
     renderCelebration(),
     renderPostCreationPrompt(),
     viewMode === 'main'
